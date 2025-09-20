@@ -1,0 +1,1 @@
+Dump produced by [Long-Candle9760](https://www.reddit.com/user/Long-Candle9760/) on Reddit and hosted in unsplit form on [archive.org](https://archive.org/details/d-4vds-closet-chatting-general-chat-1010305793876312159).
