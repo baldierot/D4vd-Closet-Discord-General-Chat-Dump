@@ -1,15 +1,14 @@
-/* Basic Styles */
 body {
     font-family: sans-serif;
     margin: 0;
     display: flex;
     height: 100vh;
-    overflow: hidden; /* Prevent body scrollbars */
+    overflow: hidden;
 }
 
 #iframe-container {
     flex-grow: 1;
-    display: flex; /* Use flexbox for the iframe */
+    display: flex;
     position: relative;
 }
 
@@ -31,8 +30,8 @@ body {
 }
 
 .spinner {
-    border: 8px solid #f3f3f3; /* Light grey */
-    border-top: 8px solid #3498db; /* Blue */
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -45,11 +44,10 @@ body {
 }
 
 iframe {
-    flex-grow: 1; /* Allow iframe to grow */
+    flex-grow: 1;
     border: none;
 }
 
-/* Sidebar Styles */
 #file-list-container {
     width: fit-content;
     min-width: 150px;
@@ -73,7 +71,7 @@ body:not(.sidebar-open) #file-list-container {
     margin: 0;
     flex-grow: 1;
     overflow-y: auto;
-    overflow-x: hidden; /* Hide horizontal scrollbar */
+    overflow-x: hidden;
 }
 
 #file-list li {
@@ -103,7 +101,6 @@ body:not(.sidebar-open) #file-list-container {
     width: 100%;
 }
 
-/* Menu Button */
 #menu-button {
     position: fixed;
     top: 10px;
@@ -115,7 +112,6 @@ body:not(.sidebar-open) #file-list-container {
     cursor: pointer;
 }
 
-/* Mobile adjustments */
 @media (max-width: 767px) {
     #file-list-container {
         position: fixed;
