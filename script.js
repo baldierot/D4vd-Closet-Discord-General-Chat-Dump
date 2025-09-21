@@ -118,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const filesToLoad = [];
         let firstCheckedElement = null;
 
+        document.querySelectorAll('#file-list li').forEach(li => li.classList.remove('active'));
+
         const allCheckboxes = fileList.querySelectorAll('input[type="checkbox"]');
         if (allCheckboxes.length === 0 && hash) {
             setTimeout(loadStateFromHash, 100);
@@ -130,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkbox = Array.from(allCheckboxes).find(cb => cb.dataset.filename === filename);
             if (checkbox) {
                 checkbox.checked = true;
+                checkbox.closest('li').classList.add('active');
                 filesToLoad.push(checkbox.dataset.filePath);
                 if (!firstCheckedElement) {
                     firstCheckedElement = checkbox;
