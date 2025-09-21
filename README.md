@@ -6,4 +6,6 @@ Dump produced on 9/18/25 by [Long-Candle9760](https://www.reddit.com/user/Long-C
 
 You can use ```Ctrl + F``` or ```Command + F``` to use "Find" on the webpage and search for specific words and mentions.
 
+Warning: The performance when viewing the dump is not great due to the sheer amount of messages. Do not load too many parts at once as it will slow down your device considerably. A powerful device is recommended.
+
 Notice: This is a dump that includes raw text messages, but only link references to assets like profile pics, emojis, attached images, GIFs, videos, rather than the assets themselves. Therefore, those assets might become unavailable in the future once Discord stops hosting them.
