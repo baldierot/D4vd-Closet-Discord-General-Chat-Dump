@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     body.classList.add('sidebar-open');
 
+    // Show loader immediately if the page is loading from a hash
+    if (window.location.hash.substring(1)) {
+        loadingOverlay.classList.remove('hidden');
+    }
+
     const getFileName = (filePath) => {
         const url = new URL(filePath, window.location.href);
         const pathname = url.pathname;
@@ -54,11 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const triggerFileLoad = (files) => {
         if (files.length === 0) {
             viewer.src = 'about:blank';
+            loadingOverlay.classList.add('hidden');
             return;
         }
 
         if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
             alert('Service worker is not active. Please reload the page or try again in a moment.');
+            loadingOverlay.classList.add('hidden'); // Hide loader if we can't proceed
             return;
         }
 
@@ -82,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const allCheckboxes = fileList.querySelectorAll('input[type="checkbox"]');
         if (allCheckboxes.length === 0 && hash) {
+            // File list not populated yet, try again shortly.
             setTimeout(loadStateFromHash, 100);
             return;
         }
@@ -122,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             window.addEventListener('hashchange', loadStateFromHash);
-            loadStateFromHash(); 
+            loadStateFromHash(); // Initial load
         });
 
     loadButton.addEventListener('click', () => {
