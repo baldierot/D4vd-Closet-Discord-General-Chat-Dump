@@ -144,16 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         triggerFileLoad(filesToLoad);
     };
 
-    fetch('file_list.txt')
-        .then(response => response.text())
-        .then(data => {
-            const files = data.split('\n').filter(file => file.trim() !== '');
+    fetch('manifest.json')
+        .then(response => response.json())
+        .then(files => {
             files.forEach((file, index) => {
                 const listItem = document.createElement('li');
                 const label = document.createElement('label');
                 const filename = getFileName(file);
                 label.htmlFor = `file-${index}`;
-                label.textContent = filename;
+                label.textContent = filename.replace('_', ' ');
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
