@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadButton = document.getElementById('load-button');
     const viewer = document.getElementById('viewer');
     const menuButton = document.getElementById('menu-button');
-    let selectedFile = null;
-    let loadedFile = null;
 
     // Open sidebar by default
     body.classList.add('sidebar-open');
@@ -18,91 +16,83 @@ document.addEventListener('DOMContentLoaded', () => {
         return basename.split('.').slice(0, -1).join('.');
     }
 
-    const loadFile = (filePath) => {
-        if (!filePath) {
-            if (loadedFile) {
-                loadedFile.classList.remove('loaded');
-            }
-            if (selectedFile) {
-                selectedFile.classList.remove('selected');
-            }
-            viewer.src = 'about:blank';
-            selectedFile = null;
-            loadedFile = null;
-            return;
-        }
-
-        if (loadedFile) {
-            loadedFile.classList.remove('loaded');
-        }
-
-        fetch(filePath)
-            .then(response => response.text())
-            .then(html => {
-                viewer.src = 'about:blank'; // Clear the iframe before writing
-                viewer.contentWindow.document.open();
-                viewer.contentWindow.document.write(html);
-                viewer.contentWindow.document.close();
-                viewer.contentWindow.scrollTo(0, 0); // Scroll to top
-            });
-
-        const fileListItem = Array.from(fileList.children).find(item => item.dataset.filePath === filePath);
-        if (fileListItem) {
-            if (selectedFile) {
-                selectedFile.classList.remove('selected');
-            }
-            selectedFile = fileListItem;
-            selectedFile.classList.add('selected');
-            loadedFile = selectedFile;
-            loadedFile.classList.add('loaded');
-            selectedFile.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        }
-    };
-
-    const loadFileFromHash = () => {
-        const filename = window.location.hash.substring(1);
-        if (filename) {
-            const fileListItem = Array.from(fileList.children).find(item => item.textContent === filename);
-            if (fileListItem) {
-                loadFile(fileListItem.dataset.filePath);
-            }
-        } else {
-            loadFile(null);
-        }
-    }
-
     fetch('file_list.txt')
         .then(response => response.text())
         .then(data => {
             const files = data.split('\n').filter(file => file.trim() !== '');
-            files.forEach(file => {
+            files.forEach((file, index) => {
                 const listItem = document.createElement('li');
-                const filename = getFileName(file);
-                listItem.textContent = filename;
-                listItem.dataset.filePath = file;
-                listItem.addEventListener('click', () => {
-                    if (selectedFile) {
-                        selectedFile.classList.remove('selected');
-                    }
-                    selectedFile = listItem;
-                    selectedFile.classList.add('selected');
-                });
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `file-${index}`;
+                checkbox.dataset.filePath = file;
+
+                const label = document.createElement('label');
+                label.htmlFor = `file-${index}`;
+                label.textContent = getFileName(file);
+
+                listItem.appendChild(label);
+                listItem.appendChild(checkbox);
                 fileList.appendChild(listItem);
             });
-
-            // Initial load
-            loadFileFromHash();
         });
 
+    const loadFiles = (files) => {
+        let isFirstFile = true;
+
+        const setupIframe = (html) => {
+            viewer.contentWindow.document.open();
+            viewer.contentWindow.document.write(html);
+            viewer.contentWindow.document.close();
+        };
+
+        const appendToIframe = (html) => {
+            const bodyContentMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (bodyContentMatch && bodyContentMatch[1]) {
+                viewer.contentWindow.document.body.insertAdjacentHTML('beforeend', bodyContentMatch[1]);
+            }
+        };
+
+        const processFiles = async () => {
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (!response.ok) {
+                        console.error(`Failed to fetch ${file}: ${response.statusText}`);
+                        continue;
+                    }
+                    const html = await response.text();
+                    if (isFirstFile) {
+                        setupIframe(html);
+                        isFirstFile = false;
+                    } else {
+                        appendToIframe(html);
+                    }
+                } catch (error) {
+                    console.error(`Error processing ${file}:`, error);
+                }
+            }
+        };
+
+        viewer.onload = () => {
+            processFiles();
+            viewer.onload = null; // Avoid re-triggering
+        };
+        viewer.src = 'about:blank'; // Clear the iframe and trigger onload
+    };
+
+
     loadButton.addEventListener('click', () => {
-        if (selectedFile) {
-            const filePath = selectedFile.dataset.filePath;
-            const filename = getFileName(filePath);
-            window.location.hash = filename;
+        const checkedFiles = Array.from(fileList.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.dataset.filePath);
+
+        if (checkedFiles.length > 0) {
+            loadFiles(checkedFiles);
+        } else {
+            // Clear iframe if no files are selected
+            viewer.src = 'about:blank';
         }
     });
-
-    window.addEventListener('hashchange', loadFileFromHash);
 
     menuButton.addEventListener('click', () => {
         body.classList.toggle('sidebar-open');

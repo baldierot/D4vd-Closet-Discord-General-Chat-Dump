@@ -46,20 +46,25 @@ body:not(.sidebar-open) #file-list-container {
 
 #file-list li {
     padding: 5px;
-    cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 
-#file-list li.selected {
-    background-color: #eee;
-}
+    #file-list li label {
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+    }
 
-#file-list li.loaded {
-    background-color: #d8eafc;
-}
-
+    #file-list li input[type="checkbox"] {
+        cursor: pointer;
+        margin-left: 5px;
+    }
 #load-button {
     margin-top: 10px;
     padding: 10px;
