@@ -4,7 +4,7 @@ Dump produced on 9/18/25 by [Long-Candle9760](https://www.reddit.com/user/Long-C
 
 [Website with the split dump](https://d4vd-closet-discord-general-chat-dump.pages.dev/)
 
-You can use ```Ctrl + F``` or ```Command + F``` to use "Find" on the webpage and search for specific words and mentions.
+You can use the search bar to search for message texts or authors, or press ```Ctrl + F``` (Windows) or ```Command + F``` (Mac) to use your browser's "Find" function to search for specific words and mentions on the page.
 
 Warning: The performance when viewing the dump is not great due to the sheer amount of messages. Do not load too many parts at once as it will slow down your device considerably. A powerful device is recommended.
 

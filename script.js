@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewer = document.getElementById('viewer');
     const menuButton = document.getElementById('menu-button');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const searchFilter = document.getElementById('search-filter');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    let messageGroupCache = [];
 
     body.classList.add('sidebar-open');
 
@@ -40,22 +44,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
         navigator.serviceWorker.addEventListener('message', event => {
             const { data } = event;
-            if (data.type === 'FILE_LOADED') {
-                if (data.isFirst) {
-                    setupIframe(data.content);
-                } else {
-                    appendToIframe(data.content);
-                }
-            } else if (data.type === 'ALL_FILES_LOADED') {
-                loadingOverlay.classList.add('hidden');
-            } else if (data.type === 'LOAD_ERROR') {
-                console.error(`Service worker failed to load ${data.file}:`, data.error);
-                loadingOverlay.classList.add('hidden');
+            switch (data.type) {
+                case 'FILE_LOADED':
+                    if (data.isFirst) {
+                        setupIframe(data.content);
+                    } else {
+                        appendToIframe(data.content);
+                    }
+                    break;
+                case 'ALL_FILES_LOADED':
+                    const iframeDoc = viewer.contentWindow.document;
+                    messageGroupCache = Array.from(iframeDoc.querySelectorAll('.chatlog__message-group'));
+                    loadingOverlay.classList.add('hidden');
+                    console.log(`UI element cache created with ${messageGroupCache.length} message groups.`);
+                    break;
+                case 'LOAD_ERROR':
+                    console.error(`Service worker failed to load ${data.file}:`, data.error);
+                    loadingOverlay.classList.add('hidden');
+                    break;
+                case 'SEARCH_COMPLETE':
+                    const matchingIds = new Set(data.matchingMessageIds);
+
+                    if (searchInput.value.trim() === '') {
+                        messageGroupCache.forEach(group => {
+                            group.style.display = '';
+                        });
+                    } else {
+                        messageGroupCache.forEach(group => {
+                            const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
+                            if (messageContainer && matchingIds.has(messageContainer.id)) {
+                                group.style.display = '';
+                            } else {
+                                group.style.display = 'none';
+                            }
+                        });
+                    }
+                    loadingOverlay.classList.add('hidden');
+                    break;
             }
         });
     }
 
     const triggerFileLoad = (files) => {
+        messageGroupCache = [];
         if (files.length === 0) {
             viewer.src = 'about:blank';
             loadingOverlay.classList.add('hidden');
@@ -136,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             window.addEventListener('hashchange', loadStateFromHash);
-            loadStateFromHash(); // Initial load
+            loadStateFromHash();
         });
 
     loadButton.addEventListener('click', () => {
@@ -149,6 +180,34 @@ document.addEventListener('DOMContentLoaded', () => {
             loadStateFromHash();
         } else {
             window.location.hash = newHash;
+        }
+    });
+
+    searchButton.addEventListener('click', () => {
+        const searchTerm = searchInput.value;
+        const filter = searchFilter.value;
+
+        if (!navigator.serviceWorker.controller) {
+            alert('Service worker is not ready.');
+            return;
+        }
+
+        loadingOverlay.classList.remove('hidden');
+        
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SEARCH_FILES',
+            searchTerm: searchTerm,
+            searchFilter: filter
+        });
+    });
+
+    searchInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            searchButton.click();
+        } else if (searchInput.value.trim() === '') {
+            messageGroupCache.forEach(group => {
+                group.style.display = '';
+            });
         }
     });
 

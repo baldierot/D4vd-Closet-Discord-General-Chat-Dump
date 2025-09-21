@@ -12,10 +12,21 @@
         <ul id="file-list"></ul>
         <button id="load-button">Load</button>
     </div>
-    <div id="iframe-container">
-        <iframe id="viewer"></iframe>
-        <div id="loading-overlay" class="hidden">
-            <div class="spinner"></div>
+    <div id="main-content">
+        <div id="search-container">
+            <select id="search-filter">
+                <option value="both">Any mention</option>
+                <option value="author">Author</option>
+                <option value="content">Message text</option>
+            </select>
+            <input type="text" id="search-input" placeholder="Search...">
+            <button id="search-button">Search</button>
+        </div>
+        <div id="iframe-container">
+            <iframe id="viewer"></iframe>
+            <div id="loading-overlay" class="hidden">
+                <div class="spinner"></div>
+            </div>
         </div>
     </div>
 

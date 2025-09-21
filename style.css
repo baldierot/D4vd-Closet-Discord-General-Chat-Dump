@@ -6,6 +6,41 @@ body {
     overflow: hidden;
 }
 
+#main-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100vh;
+}
+
+#search-container {
+    display: flex;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    background-color: #f0f0f0;
+    align-items: center;
+}
+
+#search-container select,
+#search-container input,
+#search-container button {
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#search-container input {
+    flex-grow: 1;
+}
+
+#search-container button {
+    cursor: pointer;
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
 #iframe-container {
     flex-grow: 1;
     display: flex;
