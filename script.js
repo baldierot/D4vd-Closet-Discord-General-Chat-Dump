@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadButton = document.getElementById('load-button');
     const viewer = document.getElementById('viewer');
     const menuButton = document.getElementById('menu-button');
+    const loadingOverlay = document.getElementById('loading-overlay');
 
     // Open sidebar by default
     body.classList.add('sidebar-open');
@@ -49,8 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (data.type === 'ALL_FILES_LOADED') {
                 console.log('All files have been loaded by the service worker.');
+                loadingOverlay.classList.add('hidden');
             } else if (data.type === 'LOAD_ERROR') {
                 console.error(`Service worker failed to load ${data.file}:`, data.error);
+                loadingOverlay.classList.add('hidden');
             }
         });
     }
@@ -91,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Service worker is not active. Please reload the page or try again in a moment.');
             return;
         }
+
+        loadingOverlay.classList.remove('hidden');
 
         // Set up a one-time listener for when the iframe is cleared and ready
         viewer.onload = () => {
