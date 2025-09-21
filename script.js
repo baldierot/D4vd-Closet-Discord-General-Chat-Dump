@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     body.classList.add('sidebar-open');
 
-    // Show loader immediately if the page is loading from a hash
     if (window.location.hash.substring(1)) {
         loadingOverlay.classList.remove('hidden');
     }
@@ -65,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
             alert('Service worker is not active. Please reload the page or try again in a moment.');
-            loadingOverlay.classList.add('hidden'); // Hide loader if we can't proceed
+            loadingOverlay.classList.add('hidden');
             return;
         }
 
@@ -86,10 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const hash = window.location.hash.substring(1);
         const filenamesFromHash = hash ? hash.split(',') : [];
         const filesToLoad = [];
+        let firstCheckedElement = null;
 
         const allCheckboxes = fileList.querySelectorAll('input[type="checkbox"]');
         if (allCheckboxes.length === 0 && hash) {
-            // File list not populated yet, try again shortly.
             setTimeout(loadStateFromHash, 100);
             return;
         }
@@ -101,8 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (checkbox) {
                 checkbox.checked = true;
                 filesToLoad.push(checkbox.dataset.filePath);
+                if (!firstCheckedElement) {
+                    firstCheckedElement = checkbox;
+                }
             }
         });
+
+        if (firstCheckedElement) {
+            firstCheckedElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
 
         triggerFileLoad(filesToLoad);
     };
