@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 viewer.contentWindow.document.open();
                 viewer.contentWindow.document.write(html);
                 viewer.contentWindow.document.close();
+                viewer.contentWindow.scrollTo(0, 0); // Scroll to top
             });
 
         const fileListItem = Array.from(fileList.children).find(item => item.dataset.filePath === filePath);
