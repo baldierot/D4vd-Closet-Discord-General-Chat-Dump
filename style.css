@@ -35,7 +35,7 @@ header {
     border-radius: 3px;
 }
 
-#search-container input {
+#search-input {
     flex-grow: 1;
     width: 80px;
     min-width: 80px;
@@ -51,6 +51,18 @@ header {
 #search-matches {
     display: flex;
     align-items: center;
+}
+
+#search-container label:not(.highlight-container label) {
+    white-space: nowrap;
+}
+
+
+
+.highlight-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .container {

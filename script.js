@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const searchMatches = document.getElementById('search-matches');
+    const highlightResults = document.getElementById('highlight-results');
     const header = document.querySelector('header');
     let messageGroupCache = [];
 
@@ -89,20 +90,48 @@ document.addEventListener('DOMContentLoaded', () => {
                     const matchingIds = new Set(data.matchingMessageIds);
                     searchMatches.textContent = `${matchingIds.size} matches`;
 
+                    const iframeDocument = viewer.contentWindow.document;
+                    const style = iframeDocument.createElement('style');
+                    style.innerHTML = `[id^="chatlog__message-container-"].highlight { background-color: darkred; }`;
+                    iframeDocument.head.appendChild(style);
+
                     if (searchInput.value.trim() === '') {
                         messageGroupCache.forEach(group => {
                             group.style.display = '';
+                            const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
+                            if (messageContainer) {
+                                messageContainer.classList.remove('highlight');
+                            }
                         });
                         searchMatches.textContent = '';
                     } else {
-                        messageGroupCache.forEach(group => {
-                            const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
-                            if (messageContainer && matchingIds.has(messageContainer.id)) {
+                        if (highlightResults.checked) {
+                            messageGroupCache.forEach(group => {
+                                const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
+                                if (messageContainer) {
+                                    if (matchingIds.has(messageContainer.id)) {
+                                        messageContainer.classList.add('highlight');
+                                    } else {
+                                        messageContainer.classList.remove('highlight');
+                                    }
+                                }
                                 group.style.display = '';
-                            } else {
-                                group.style.display = 'none';
-                            }
-                        });
+                            });
+                        } else {
+                            messageGroupCache.forEach(group => {
+                                const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
+                                if (messageContainer) {
+                                    messageContainer.classList.remove('highlight');
+                                    if (matchingIds.has(messageContainer.id)) {
+                                        group.style.display = '';
+                                    } else {
+                                        group.style.display = 'none';
+                                    }
+                                } else {
+                                    group.style.display = 'none';
+                                }
+                            });
+                        }
                     }
                     loadingOverlay.classList.add('hidden');
                     break;
@@ -146,6 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const filter = searchParams.get('filter');
         if (filter) {
             searchFilter.value = filter;
+        }
+        const highlight = searchParams.get('highlight');
+        if (highlight === 'true') {
+            highlightResults.checked = true;
+        } else {
+            highlightResults.checked = false;
         }
         const hash = window.location.hash.substring(1);
         const filenamesFromHash = hash ? hash.split(',') : [];
@@ -208,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     loadButton.addEventListener('click', () => {
+        searchMatches.textContent = '';
         const searchParams = new URLSearchParams(window.location.search);
         searchParams.delete('search');
         searchParams.delete('filter');
@@ -225,6 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    highlightResults.addEventListener('change', () => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (highlightResults.checked) {
+            searchParams.set('highlight', 'true');
+        } else {
+            searchParams.delete('highlight');
+        }
+        window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}#${window.location.hash.substring(1)}`);
+    });
+
     searchButton.addEventListener('click', () => {
         const searchTerm = searchInput.value;
         const filter = searchFilter.value;
@@ -233,9 +279,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchTerm.trim() === '') {
             searchParams.delete('search');
             searchParams.delete('filter');
+            searchParams.delete('highlight');
         } else {
             searchParams.set('search', searchTerm);
             searchParams.set('filter', filter);
+            if (highlightResults.checked) {
+                searchParams.set('highlight', 'true');
+            } else {
+                searchParams.delete('highlight');
+            }
         }
         window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}#${window.location.hash.substring(1)}`);
 
