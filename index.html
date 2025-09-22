@@ -6,13 +6,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button id="menu-button">&#9776;</button>
-
-    <div id="file-list-container">
-        <ul id="file-list"></ul>
-        <button id="load-button">Load</button>
-    </div>
-    <div id="main-content">
+    <header>
+        <button id="menu-button">&#9776;</button>
         <div id="search-container">
             <select id="search-filter">
                 <option value="both">Any mention</option>
@@ -22,10 +17,18 @@
             <input type="text" id="search-input" placeholder="Search...">
             <button id="search-button">Search</button>
         </div>
-        <div id="iframe-container">
-            <iframe id="viewer"></iframe>
-            <div id="loading-overlay" class="hidden">
-                <div class="spinner"></div>
+    </header>
+    <div class="container">
+        <div id="file-list-container">
+            <ul id="file-list"></ul>
+            <button id="load-button">Load</button>
+        </div>
+        <div id="main-content">
+            <div id="iframe-container">
+                <iframe id="viewer"></iframe>
+                <div id="loading-overlay" class="hidden">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </div>
     </div>

@@ -2,23 +2,28 @@ body {
     font-family: sans-serif;
     margin: 0;
     display: flex;
+    flex-direction: column;
     height: 100vh;
     overflow: hidden;
 }
 
-#main-content {
+* {
+    box-sizing: border-box;
+}
+
+header {
     display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    height: 100vh;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    background-color: #f0f0f0;
 }
 
 #search-container {
     display: flex;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    background-color: #f0f0f0;
     align-items: center;
+    flex-grow: 1;
+    margin-left: 10px;
 }
 
 #search-container select,
@@ -39,6 +44,31 @@ body {
     background-color: #3498db;
     color: white;
     border-color: #3498db;
+}
+
+.container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+#file-list-container {
+    width: fit-content;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+body:not(.sidebar-open) #file-list-container {
+    display: none;
+}
+
+#main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #iframe-container {
@@ -83,29 +113,11 @@ iframe {
     border: none;
 }
 
-#file-list-container {
-    width: fit-content;
-    min-width: 150px;
-    max-width: 50%;
-    border-right: 1px solid #ccc;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-body:not(.sidebar-open) #file-list-container {
-    display: none;
-}
-
 #file-list {
     list-style-type: none;
     padding: 0;
     margin: 0;
     flex-grow: 1;
-    overflow-y: auto;
     overflow-x: hidden;
 }
 
@@ -142,26 +154,17 @@ body:not(.sidebar-open) #file-list-container {
 }
 
 #menu-button {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 3000;
     background: #fff;
     border: 1px solid #ccc;
     padding: 10px;
     cursor: pointer;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
     #file-list-container {
-        position: fixed;
-        left: -100%;
-        height: 100%;
-        z-index: 2000;
-        background: #fff;
-    }
-
-    body.sidebar-open #file-list-container {
-        left: 0;
+        position: absolute;
+        z-index: 10;
+        background-color: #f0f0f0;
+        border-right: 1px solid #ccc;
     }
 }

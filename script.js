@@ -9,7 +9,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchFilter = document.getElementById('search-filter');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
+    const header = document.querySelector('header');
     let messageGroupCache = [];
+
+    const updateFileListContainerHeight = () => {
+        if (window.innerWidth <= 768) {
+            const headerHeight = header.offsetHeight;
+            fileListContainer.style.height = `calc(100vh - ${headerHeight}px)`;
+        } else {
+            fileListContainer.style.height = 'auto';
+        }
+    };
+
+    window.addEventListener('resize', updateFileListContainerHeight);
+    updateFileListContainerHeight();
 
     body.classList.add('sidebar-open');
 
@@ -33,12 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
             viewer.contentWindow.document.open();
             viewer.contentWindow.document.write(html);
             viewer.contentWindow.document.close();
+            viewer.contentWindow.document.documentElement.style.overflowX = 'hidden';
         };
 
         const appendToIframe = (html) => {
             const bodyContentMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
             if (bodyContentMatch && bodyContentMatch[1]) {
                 viewer.contentWindow.document.body.insertAdjacentHTML('beforeend', bodyContentMatch[1]);
+                viewer.contentWindow.document.documentElement.style.overflowX = 'hidden';
             }
         };
 
@@ -170,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.addEventListener('hashchange', loadStateFromHash);
             loadStateFromHash();
+
         });
 
     loadButton.addEventListener('click', () => {
