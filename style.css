@@ -24,19 +24,21 @@ header {
     align-items: center;
     flex-grow: 1;
     margin-left: 10px;
+    gap: 10px;
 }
 
 #search-container select,
 #search-container input,
 #search-container button {
     padding: 8px;
-    margin-right: 10px;
     border: 1px solid #ccc;
     border-radius: 3px;
 }
 
 #search-container input {
     flex-grow: 1;
+    width: 80px;
+    min-width: 80px;
 }
 
 #search-container button {
@@ -161,6 +163,10 @@ iframe {
 }
 
 @media (max-width: 768px) {
+    #search-container {
+        flex-wrap: wrap;
+    }
+
     #file-list-container {
         position: absolute;
         z-index: 10;
