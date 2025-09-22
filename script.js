@@ -72,6 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     messageGroupCache = Array.from(iframeDoc.querySelectorAll('.chatlog__message-group'));
                     loadingOverlay.classList.add('hidden');
                     console.log(`UI element cache created with ${messageGroupCache.length} message groups.`);
+
+                    const searchParams = new URLSearchParams(window.location.search);
+                    const search = searchParams.get('search');
+                    if (search) {
+                        searchInput.value = search;
+                        searchButton.click();
+                    }
                     break;
                 case 'LOAD_ERROR':
                     console.error(`Service worker failed to load ${data.file}:`, data.error);
@@ -128,6 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadStateFromHash = () => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const search = searchParams.get('search');
+        if (search) {
+            searchInput.value = search;
+        }
+        const filter = searchParams.get('filter');
+        if (filter) {
+            searchFilter.value = filter;
+        }
         const hash = window.location.hash.substring(1);
         const filenamesFromHash = hash ? hash.split(',') : [];
         const filesToLoad = [];
@@ -189,6 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     loadButton.addEventListener('click', () => {
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.delete('search');
+        searchParams.delete('filter');
+        window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}#${window.location.hash.substring(1)}`);
+
         const checkedFilenames = Array.from(fileList.querySelectorAll('input[type="checkbox"]:checked'))
             .map(cb => cb.dataset.filename);
         
@@ -204,6 +225,16 @@ document.addEventListener('DOMContentLoaded', () => {
     searchButton.addEventListener('click', () => {
         const searchTerm = searchInput.value;
         const filter = searchFilter.value;
+
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchTerm.trim() === '') {
+            searchParams.delete('search');
+            searchParams.delete('filter');
+        } else {
+            searchParams.set('search', searchTerm);
+            searchParams.set('filter', filter);
+        }
+        window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}#${window.location.hash.substring(1)}`);
 
         if (!navigator.serviceWorker.controller) {
             alert('Service worker is not ready.');
