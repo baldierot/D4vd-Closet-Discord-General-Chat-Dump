@@ -60,9 +60,7 @@ header {
 
 
 .highlight-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    display: none !important;
 }
 
 .container {
