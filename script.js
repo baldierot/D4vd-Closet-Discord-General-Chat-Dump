@@ -222,10 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
             searchButton.click();
-        } else if (searchInput.value.trim() === '') {
-            messageGroupCache.forEach(group => {
-                group.style.display = '';
-            });
         }
     });
 
