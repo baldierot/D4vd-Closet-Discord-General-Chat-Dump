@@ -48,6 +48,11 @@ header {
     border-color: #3498db;
 }
 
+#search-matches {
+    display: flex;
+    align-items: center;
+}
+
 .container {
     display: flex;
     flex-grow: 1;

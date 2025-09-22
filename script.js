@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchFilter = document.getElementById('search-filter');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
+    const searchMatches = document.getElementById('search-matches');
     const header = document.querySelector('header');
     let messageGroupCache = [];
 
@@ -86,11 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'SEARCH_COMPLETE':
                     const matchingIds = new Set(data.matchingMessageIds);
+                    searchMatches.textContent = `${matchingIds.size} matches`;
 
                     if (searchInput.value.trim() === '') {
                         messageGroupCache.forEach(group => {
                             group.style.display = '';
                         });
+                        searchMatches.textContent = '';
                     } else {
                         messageGroupCache.forEach(group => {
                             const messageContainer = group.querySelector('[id^="chatlog__message-container-"]');
