@@ -70,6 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     break;
                 case 'ALL_FILES_LOADED':
+                    searchFilter.disabled = false;
+                    searchInput.disabled = false;
+                    searchButton.disabled = false;
+
                     const iframeDoc = viewer.contentWindow.document;
                     messageGroupCache = Array.from(iframeDoc.querySelectorAll('.chatlog__message-group'));
                     loadingOverlay.classList.add('hidden');
