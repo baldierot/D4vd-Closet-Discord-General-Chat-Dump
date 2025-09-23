@@ -151,23 +151,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
-            alert('Service worker is not active. Please reload the page or try again in a moment.');
-            loadingOverlay.classList.add('hidden');
-            return;
-        }
+        navigator.serviceWorker.ready.then((registration) => {
+            if (!registration.active) {
+                alert('Service worker is not active. Please reload the page or try again in a moment.');
+                loadingOverlay.classList.add('hidden');
+                return;
+            }
 
-        loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.remove('hidden');
 
-        viewer.onload = () => {
-            navigator.serviceWorker.controller.postMessage({
-                type: 'LOAD_FILES',
-                files: files
-            });
-            viewer.onload = null;
-        };
+            viewer.onload = () => {
+                registration.active.postMessage({
+                    type: 'LOAD_FILES',
+                    files: files
+                });
+                viewer.onload = null;
+            };
 
-        viewer.src = 'about:blank';
+            viewer.src = 'about:blank';
+        });
     };
 
     const loadStateFromHash = () => {
@@ -295,17 +297,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}#${window.location.hash.substring(1)}`);
 
-        if (!navigator.serviceWorker.controller) {
-            alert('Service worker is not ready.');
-            return;
-        }
+        navigator.serviceWorker.ready.then((registration) => {
+            if (!registration.active) {
+                alert('Service worker is not active. Please reload the page or try again in a moment.');
+                return;
+            }
 
-        loadingOverlay.classList.remove('hidden');
-        
-        navigator.serviceWorker.controller.postMessage({
-            type: 'SEARCH_FILES',
-            searchTerm: searchTerm,
-            searchFilter: filter
+            loadingOverlay.classList.remove('hidden');
+            
+            registration.active.postMessage({
+                type: 'SEARCH_FILES',
+                searchTerm: searchTerm,
+                searchFilter: filter
+            });
         });
     });
 

@@ -9,7 +9,9 @@ function openDb() {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            db.createObjectStore(STORE_NAME);
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
         };
         request.onsuccess = (event) => {
             resolve(event.target.result);
@@ -38,18 +40,18 @@ function loadIndexesFromDb(db) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
         const store = transaction.objectStore(STORE_NAME);
-        const request = store.getAll();
-        const keysRequest = store.getAllKeys();
+        const request = store.openCursor();
+        const results = {};
 
-        let results = {};
-        keysRequest.onsuccess = () => {
-            request.onsuccess = () => {
-                for(let i = 0; i < request.result.length; i++) {
-                    results[keysRequest.result[i]] = request.result[i];
-                }
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                results[cursor.key] = cursor.value;
+                cursor.continue();
+            } else {
                 resolve(results);
-            };
-        }
+            }
+        };
 
         request.onerror = (event) => {
             reject(event.target.error);
@@ -57,9 +59,13 @@ function loadIndexesFromDb(db) {
     });
 }
 
-self.addEventListener('install', (event) => { self.skipWaiting(); });
+self.addEventListener('install', (event) => { 
+    console.log('Service worker installing...');
+    self.skipWaiting(); 
+});
 
 self.addEventListener('activate', (event) => {
+    console.log('Service worker activating...');
     searchIndexes = {};
     event.waitUntil(clients.claim());
 });
@@ -79,6 +85,7 @@ self.addEventListener('message', (event) => {
 });
 
 async function loadHtmlAndIndexes(files, client) {
+    console.log('Loading HTML and indexes...');
     const db = await openDb();
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
@@ -102,6 +109,7 @@ async function loadHtmlAndIndexes(files, client) {
             if (indexResponse.ok) {
                 const indexes = await indexResponse.json();
                 searchIndexes[file] = indexes;
+                console.log(`Saving indexes for ${file} to DB.`);
                 await saveIndexesToDb(db, file, indexes);
             }
 
@@ -109,14 +117,18 @@ async function loadHtmlAndIndexes(files, client) {
             client.postMessage({ type: 'LOAD_ERROR', file: file, error: error.message });
         }
     }
+    console.log('Finished loading HTML and indexes.');
     client.postMessage({ type: 'ALL_FILES_LOADED' });
 }
 
 async function searchWithCachedIndexes(searchTerm, filter, client) {
+    console.log('Searching with cached indexes...');
     if (Object.keys(searchIndexes).length === 0) {
+        console.log('searchIndexes is empty. Loading from DB...');
         try {
             const db = await openDb();
             searchIndexes = await loadIndexesFromDb(db);
+            console.log('Loaded indexes from DB:', searchIndexes);
         } catch (error) {
             console.error("Failed to load indexes from DB:", error);
         }
