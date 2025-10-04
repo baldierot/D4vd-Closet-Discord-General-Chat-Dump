@@ -1,4 +1,4 @@
-This is a text-only dump produced on 9/18/25 by [Long-Candle9760](https://www.reddit.com/user/Long-Candle9760/) on Reddit and hosted in unsplit form on [archive.org](https://archive.org/details/d-4vds-closet-chatting-general-chat-1010305793876312159).
+This is a text-only dump of the General Chat produced on 9/18/25 by [Long-Candle9760](https://www.reddit.com/user/Long-Candle9760/) on Reddit and hosted in unsplit form on [archive.org](https://archive.org/details/d-4vds-closet-chatting-general-chat-1010305793876312159).
 
 ![Screenshot of the website](Screenshot.png)
 
