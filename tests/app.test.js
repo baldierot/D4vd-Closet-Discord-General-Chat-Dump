@@ -127,13 +127,15 @@ function setupDOM() {
             </main>
             <div id="search-results" class="hidden">
                 <div id="search-results-header">
-                    <span id="search-progress"></span>
+                    <div id="search-results-top-row">
+                        <span id="search-progress"></span>
+                        <button id="search-close">✕</button>
+                    </div>
                     <div id="search-result-filters">
                         <input type="text" id="filter-display" class="result-filter" placeholder="Display name">
                         <input type="text" id="filter-id" class="result-filter" placeholder="ID">
                         <input type="text" id="filter-message" class="result-filter" placeholder="Message">
                     </div>
-                    <button id="search-close">✕</button>
                 </div>
                 <div id="search-pinned-day" class="hidden"></div>
                 <div id="search-results-list"></div>
