@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const CHUNK_MAX_BYTES = 20 * 1024 * 1024;
 const manifest = JSON.parse(fs.readFileSync('day-manifest.json', 'utf8'));
 
 const authorSet = new Map();
@@ -58,10 +59,44 @@ for (const [, { idx, display }] of displayNameSet) {
     displayNames[idx] = display;
 }
 
-const result = { days, dayOffsets, authors, displayNames, di: allDi, ai: allAi, dni: allDni, c: allC };
-const json = JSON.stringify(result);
-fs.writeFileSync('search-data.json', json);
+// Split into chunks
+let chunkIdx = 0;
+let start = 0;
+let totalSize = 0;
 
-const rawMB = (Buffer.byteLength(json) / 1024 / 1024).toFixed(1);
+while (start < entryCount) {
+    let end = start;
+    let size = 0;
+    while (end < entryCount) {
+        const entryCost = JSON.stringify(allC[end]).length + 20;
+        if (size + entryCost > CHUNK_MAX_BYTES && end > start) break;
+        size += entryCost;
+        end++;
+    }
+
+    const chunk = {
+        di: allDi.slice(start, end),
+        ai: allAi.slice(start, end),
+        dni: allDni.slice(start, end),
+        c: allC.slice(start, end),
+    };
+    const json = JSON.stringify(chunk);
+    const filename = `search-data-${chunkIdx}.json`;
+    fs.writeFileSync(filename, json);
+    const mb = (Buffer.byteLength(json) / 1024 / 1024).toFixed(1);
+    process.stderr.write(`${filename}: ${mb} MB (${end - start} entries)\n`);
+    totalSize += Buffer.byteLength(json);
+    chunkIdx++;
+    start = end;
+}
+
+const meta = { days, dayOffsets, authors, displayNames, chunks: chunkIdx };
+const metaJson = JSON.stringify(meta);
+fs.writeFileSync('search-data-meta.json', metaJson);
+totalSize += Buffer.byteLength(metaJson);
+
+// Clean up old single file
+if (fs.existsSync('search-data.json')) fs.unlinkSync('search-data.json');
+
 process.stderr.write(`\nDone: ${entryCount} entries, ${authors.length} authors, ${displayNames.length} display names\n`);
-process.stderr.write(`search-data.json: ${rawMB} MB (will be ~${(rawMB / 3.3).toFixed(0)} MB gzipped by server)\n`);
+process.stderr.write(`${chunkIdx} chunks + meta, total ${(totalSize / 1024 / 1024).toFixed(1)} MB\n`);

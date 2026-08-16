@@ -63,11 +63,14 @@ const DAY2_INDEX = [
     { messageId: 'chatlog__message-container-204', author: 'charlie', content: 'hello' },
 ];
 
-const SEARCH_DATA = {
+const SEARCH_META = {
     days: ['2023-01-10', '2023-01-11', '2023-01-12', '2023-02-01'],
     dayOffsets: [0, 3, 8, 10],
     authors: ['alice', 'bob', 'charlie', 'dave', 'eve'],
     displayNames: ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve'],
+    chunks: 1,
+};
+const SEARCH_CHUNK_0 = {
     di: [0,0,0, 1,1,1,1,1, 2,2, 3,3,3,3],
     ai: [0,1,2, 3,4,0,1,2, 0,1, 0,1,2,3],
     dni: [0,1,2, 3,4,0,1,2, 0,1, 0,1,2,3],
@@ -331,7 +334,8 @@ describe('search across all days', () => {
     it('shows results panel with matches', async () => {
         vi.stubGlobal('fetch', mockFetch([
             { url: 'day-manifest.json', json: TEST_MANIFEST },
-            { url: 'search-data.json', json: SEARCH_DATA },
+            { url: 'search-data-meta.json', json: SEARCH_META },
+            { url: 'search-data-0.json', json: SEARCH_CHUNK_0 },
         ]));
 
         const { ready } = await import('../script.js');
@@ -358,7 +362,8 @@ describe('search across all days', () => {
     it('closes results panel on escape', async () => {
         vi.stubGlobal('fetch', mockFetch([
             { url: 'day-manifest.json', json: TEST_MANIFEST },
-            { url: 'search-data.json', json: SEARCH_DATA },
+            { url: 'search-data-meta.json', json: SEARCH_META },
+            { url: 'search-data-0.json', json: SEARCH_CHUNK_0 },
         ]));
 
         const { ready } = await import('../script.js');
