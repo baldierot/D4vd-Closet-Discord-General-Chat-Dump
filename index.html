@@ -1,43 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>D4VD Discord General Chat Dump (9/18/25)</title>
+    <title>D4VD Discord General Chat Dump</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="chatlog.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.8.1/lottie.min.js"></script>
 </head>
 <body>
     <header>
-        <button id="menu-button">&#9776;</button>
-        <div id="search-container">
-            <select id="search-filter" disabled>
-                <option value="both">Both</option>
-                <option value="author">Author</option>
-                <option value="content">Message</option>
-            </select>
-            <input type="text" id="search-input" placeholder="Search..." disabled>
-            <button id="search-button" disabled>Search</button>
-            <span id="search-matches"></span>
-            <div class="highlight-container">
-                <input type="checkbox" id="highlight-results">
-                <label for="highlight-results">Highlight</label>
+        <div id="range-label">
+            <div class="range-date-wrap">
+                <button id="range-start-btn" class="range-date-btn" title="Pick start date">...</button>
+                <span id="loaded-start-indicator" class="loaded-indicator"></span>
             </div>
+            <span class="range-sep">—</span>
+            <div class="range-date-wrap">
+                <button id="range-end-btn" class="range-date-btn" title="Pick end date">...</button>
+                <span id="loaded-end-indicator" class="loaded-indicator"></span>
+            </div>
+        </div>
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search within range...">
+            <button id="search-button">Search</button>
         </div>
     </header>
-    <div class="container">
-        <div id="file-list-container">
-            <ul id="file-list"></ul>
-            <button id="load-button">Load</button>
-        </div>
-        <div id="main-content">
-            <div id="iframe-container">
-                <iframe id="viewer"></iframe>
-                <div id="loading-overlay" class="hidden">
-                    <div class="spinner"></div>
+    <div class="app-container">
+        <aside id="slider-panel">
+            <div id="slider-track">
+                <div id="selected-fill"></div>
+                <div id="loaded-start-mark" class="loaded-mark">
+                    <span class="loaded-mark-label"></span>
+                </div>
+                <div id="loaded-end-mark" class="loaded-mark">
+                    <span class="loaded-mark-label"></span>
+                </div>
+                <div id="handle-start" class="slider-handle">
+                    <span id="handle-start-label" class="handle-label">...</span>
+                </div>
+                <div id="handle-end" class="slider-handle">
+                    <span id="handle-end-label" class="handle-label">...</span>
                 </div>
             </div>
+            <button id="load-range-btn">Load</button>
+            <input type="date" id="picker-start" class="sr-only">
+            <input type="date" id="picker-end" class="sr-only">
+        </aside>
+        <main id="content">
+            <div id="timeline"></div>
+        </main>
+        <div id="search-results" class="hidden">
+            <div id="search-results-header">
+                <span id="search-progress"></span>
+                <div id="search-result-filters">
+                    <input type="text" id="filter-display" class="result-filter" placeholder="Display name">
+                    <input type="text" id="filter-id" class="result-filter" placeholder="ID">
+                    <input type="text" id="filter-message" class="result-filter" placeholder="Message">
+                </div>
+                <button id="search-close" title="Close search">✕</button>
+            </div>
+            <div id="search-results-list"></div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+    function scrollToMessage(event, id) {
+        const element = document.getElementById("chatlog__message-container-" + id);
+        if (!element) return;
+        event.preventDefault();
+        element.classList.add("chatlog__message-container--highlighted");
+        const main = document.getElementById("content");
+        const rect = element.getBoundingClientRect();
+        const mainRect = main.getBoundingClientRect();
+        main.scrollTo({
+            top: main.scrollTop + rect.top - mainRect.top - main.clientHeight / 2,
+            behavior: "smooth",
+        });
+        setTimeout(() => element.classList.remove("chatlog__message-container--highlighted"), 2000);
+    }
+
+    function showSpoiler(event, element) {
+        if (!element) return;
+        if (element.classList.contains("chatlog__attachment--hidden")) {
+            event.preventDefault();
+            element.classList.remove("chatlog__attachment--hidden");
+        }
+        if (element.classList.contains("chatlog__markdown-spoiler--hidden")) {
+            event.preventDefault();
+            element.classList.remove("chatlog__markdown-spoiler--hidden");
+        }
+    }
+    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
