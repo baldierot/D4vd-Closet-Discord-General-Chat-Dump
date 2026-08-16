@@ -456,6 +456,22 @@ header {
     color: #dcddde;
 }
 
+#search-pinned-day {
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8e9297;
+    background-color: #2f3136;
+    border-bottom: 1px solid #202225;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+#search-pinned-day.hidden {
+    display: none;
+}
+
 #search-results-list {
     flex: 1;
     overflow-y: auto;
