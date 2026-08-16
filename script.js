@@ -532,6 +532,7 @@ const searchResults = document.getElementById('search-results');
 const searchProgress = document.getElementById('search-progress');
 const searchResultsList = document.getElementById('search-results-list');
 const searchClose = document.getElementById('search-close');
+const searchPinnedDay = document.getElementById('search-pinned-day');
 const filterDisplay = document.getElementById('filter-display');
 const filterId = document.getElementById('filter-id');
 const filterMessage = document.getElementById('filter-message');
@@ -539,7 +540,6 @@ const filterMessage = document.getElementById('filter-message');
 const VIRT_HEADER_H = 30;
 const VIRT_RESULT_H = 50;
 const VIRT_BUFFER = 400;
-const MAX_SPACER_H = 10_000_000;
 let virtState = null;
 let allSearchItems = null;
 
@@ -627,7 +627,11 @@ async function doSearch() {
     renderSearchItems(items);
 
     const rangeDays = selectedEndIdx - selectedStartIdx + 1;
-    searchProgress.textContent = `${totalMatches} result${totalMatches === 1 ? '' : 's'} within ${rangeDays}-day range`;
+    let progressText = `${totalMatches} result${totalMatches === 1 ? '' : 's'} within ${rangeDays}-day range`;
+    if (virtState.truncated) {
+        progressText += ' ⚠ Too many to display — showing first ~660k, use filters to narrow down';
+    }
+    searchProgress.textContent = progressText;
 }
 
 function renderSearchItems(items) {
@@ -637,22 +641,33 @@ function renderSearchItems(items) {
     }
 
     const offsets = new Float64Array(items.length + 1);
+    const headerOf = new Int32Array(items.length);
+    let lastHeader = -1;
     for (let i = 0; i < items.length; i++) {
+        if (items[i].type === 'header') lastHeader = i;
+        headerOf[i] = lastHeader;
         offsets[i + 1] = offsets[i] + (items[i].type === 'header' ? VIRT_HEADER_H : VIRT_RESULT_H);
     }
 
-    const totalH = offsets[items.length];
-    const spacerH = Math.min(totalH, MAX_SPACER_H);
+    const MAX_SCROLL_H = 33_000_000;
+    let totalH = offsets[items.length];
+    let truncated = false;
+    if (totalH > MAX_SCROLL_H) {
+        let cap = items.length;
+        for (let i = 0; i < items.length; i++) {
+            if (offsets[i + 1] > MAX_SCROLL_H) { cap = i; break; }
+        }
+        items = items.slice(0, cap);
+        totalH = offsets[cap];
+        truncated = true;
+    }
 
     searchResultsList.innerHTML = '';
-    const viewport = document.createElement('div');
-    viewport.style.cssText = 'position:sticky;top:0;height:0;z-index:1;overflow:visible;';
-    searchResultsList.appendChild(viewport);
     const spacer = document.createElement('div');
-    spacer.style.height = spacerH + 'px';
+    spacer.style.height = totalH + 'px';
     searchResultsList.appendChild(spacer);
 
-    virtState = { items, offsets, spacer, viewport, totalH, spacerH, rendered: { start: -1, end: -1 } };
+    virtState = { items, offsets, headerOf, spacer, truncated, rendered: { start: -1, end: -1 }, pinnedDate: null };
     searchResultsList.scrollTop = 0;
     syncSearchView();
     searchResultsList.addEventListener('scroll', syncSearchView);
@@ -695,16 +710,12 @@ function applyResultFilters() {
 
 function syncSearchView() {
     if (!virtState) return;
-    const { items, offsets, viewport, totalH, spacerH } = virtState;
+    const { items, offsets, headerOf, spacer } = virtState;
 
-    const rawScrollTop = searchResultsList.scrollTop;
+    const scrollTop = searchResultsList.scrollTop;
     const viewH = searchResultsList.clientHeight;
-    const maxRawScroll = spacerH - viewH;
-    const virtualTop = maxRawScroll > 0
-        ? rawScrollTop * (totalH - viewH) / maxRawScroll
-        : 0;
-    const top = Math.max(0, virtualTop - VIRT_BUFFER);
-    const bottom = virtualTop + viewH + VIRT_BUFFER;
+    const top = Math.max(0, scrollTop - VIRT_BUFFER);
+    const bottom = scrollTop + viewH + VIRT_BUFFER;
 
     let lo = 0, hi = items.length - 1;
     while (lo < hi) {
@@ -722,8 +733,22 @@ function syncSearchView() {
     }
     const endIdx = lo;
 
+    const hIdx = headerOf[startIdx];
+    if (hIdx >= 0) {
+        const h = items[hIdx];
+        if (h.date !== virtState.pinnedDate) {
+            virtState.pinnedDate = h.date;
+            searchPinnedDay.textContent = `${formatDateLabel(h.date)} — ${h.count} match${h.count === 1 ? '' : 'es'}`;
+            searchPinnedDay.classList.remove('hidden');
+        }
+    }
+
     if (startIdx === virtState.rendered.start && endIdx === virtState.rendered.end) return;
     virtState.rendered = { start: startIdx, end: endIdx };
+
+    while (searchResultsList.lastChild !== spacer) {
+        searchResultsList.lastChild.remove();
+    }
 
     const frag = document.createDocumentFragment();
     for (let i = startIdx; i <= endIdx; i++) {
@@ -757,13 +782,12 @@ function syncSearchView() {
             el.addEventListener('click', () => navigateToEntry(item.date, item.dayIdx, item.entryIdx));
         }
         el.style.position = 'absolute';
-        el.style.top = (offsets[i] - virtualTop) + 'px';
+        el.style.top = offsets[i] + 'px';
         el.style.left = '0';
         el.style.right = '0';
         frag.appendChild(el);
     }
-    viewport.innerHTML = '';
-    viewport.appendChild(frag);
+    searchResultsList.appendChild(frag);
 }
 
 async function navigateToEntry(date, dayIdx, entryIdx) {
@@ -862,6 +886,7 @@ function closeSearchResults() {
     searchResults.classList.add('hidden');
     content.style.display = '';
     searchProgress.textContent = '';
+    searchPinnedDay.classList.add('hidden');
     allSearchItems = null;
     filterDisplay.value = '';
     filterId.value = '';

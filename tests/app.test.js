@@ -132,6 +132,7 @@ function setupDOM() {
                     </div>
                     <button id="search-close">✕</button>
                 </div>
+                <div id="search-pinned-day" class="hidden"></div>
                 <div id="search-results-list"></div>
             </div>
         </div>
