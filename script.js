@@ -53,8 +53,38 @@ async function init() {
     selectedStartIdx = 0;
     selectedEndIdx = Math.min(manifest.length - 1, Math.max(0, Math.round(manifest.length * 0.05) - 1));
 
-    searchDataPromise = fetch('search-data.json').then(r => r.ok ? r.json() : null).catch(() => null);
+    searchDataPromise = loadSearchData();
     searchDataPromise.then(data => { searchData = data; });
+
+    async function loadSearchData() {
+        try {
+            const meta = await fetch('search-data-meta.json').then(r => r.ok ? r.json() : null);
+            if (!meta) return null;
+            const chunks = await Promise.all(
+                Array.from({ length: meta.chunks }, (_, i) =>
+                    fetch(`search-data-${i}.json`).then(r => r.json())
+                )
+            );
+            let totalLen = 0;
+            for (const ch of chunks) totalLen += ch.di.length;
+            const di = new Array(totalLen);
+            const ai = new Array(totalLen);
+            const dni = new Array(totalLen);
+            const c = new Array(totalLen);
+            let off = 0;
+            for (const ch of chunks) {
+                const n = ch.di.length;
+                for (let i = 0; i < n; i++) {
+                    di[off + i] = ch.di[i];
+                    ai[off + i] = ch.ai[i];
+                    dni[off + i] = ch.dni[i];
+                    c[off + i] = ch.c[i];
+                }
+                off += n;
+            }
+            return { days: meta.days, dayOffsets: meta.dayOffsets, authors: meta.authors, displayNames: meta.displayNames, di, ai, dni, c };
+        } catch { return null; }
+    }
 
     loadFromHash();
     setupSlider();
