@@ -134,10 +134,7 @@ function setupDOM() {
                 <div id="search-results" class="panel-hidden">
                 <div id="search-loading-overlay" class="hidden"><div class="search-spinner"></div><span id="search-loading-text"></span></div>
                 <div id="search-results-header">
-                    <div id="search-results-top-row">
-                        <span id="search-progress"></span>
-                        <button id="search-close">✕</button>
-                    </div>
+                    <span id="search-progress"></span>
                     <div id="search-result-filters">
                         <input type="text" id="filter-display" class="result-filter" placeholder="Display name">
                         <input type="text" id="filter-id" class="result-filter" placeholder="ID">
