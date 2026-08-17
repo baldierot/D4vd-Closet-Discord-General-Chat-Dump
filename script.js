@@ -420,6 +420,7 @@ function loadRange() {
     updateHash();
     updateSliderPositions();
 
+    const frag = document.createDocumentFragment();
     for (let i = loadedStartIdx; i <= loadedEndIdx; i++) {
         const day = manifest[i];
         const slot = document.createElement('div');
@@ -437,7 +438,7 @@ function loadRange() {
         chatlog.className = 'chatlog day-chatlog';
         slot.appendChild(chatlog);
 
-        timeline.appendChild(slot);
+        frag.appendChild(slot);
 
         dayStates.set(day.date, {
             index: i,
@@ -449,6 +450,7 @@ function loadRange() {
             gen,
         });
     }
+    timeline.appendChild(frag);
 
     setupObservers(gen);
 }
