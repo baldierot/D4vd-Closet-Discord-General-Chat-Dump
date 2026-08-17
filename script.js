@@ -752,10 +752,13 @@ async function doSearch() {
 
     const rangeDays = selectedEndIdx - selectedStartIdx + 1;
     let progressText = `${totalMatches} result${totalMatches === 1 ? '' : 's'} within ${rangeDays}-day range`;
-    if (virtState.truncated) {
-        progressText += ' ⚠ Too many to display — showing first ~660k, use filters to narrow down';
-    }
     searchProgress.textContent = progressText;
+    if (virtState.truncated) {
+        const warn = document.createElement('div');
+        warn.className = 'search-truncated-warn';
+        warn.textContent = '⚠ Too many to display — showing first ~660k, use filters to narrow down';
+        searchProgress.appendChild(warn);
+    }
 }
 
 function renderSearchItems(items) {

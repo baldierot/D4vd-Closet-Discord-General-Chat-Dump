@@ -484,6 +484,12 @@ header {
     font-size: 14px;
 }
 
+.search-truncated-warn {
+    color: #fac832;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
 #search-results.hidden {
     display: none !important;
 }
@@ -507,9 +513,6 @@ header {
 #search-progress {
     font-size: 13px;
     color: #dcddde;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     min-width: 0;
 }
 
