@@ -168,6 +168,13 @@ header {
     flex: 1;
     min-width: 0;
     min-height: 0;
+    position: relative;
+}
+
+#panel-stack {
+    flex: 1;
+    position: relative;
+    min-height: 0;
 }
 
 #tab-bar {
@@ -381,11 +388,16 @@ header {
 
 /* Content */
 #content {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    position: relative;
     scroll-behavior: auto;
+}
+
+#content.panel-hidden {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 #timeline {
@@ -453,14 +465,12 @@ header {
 
 /* Search results panel */
 #search-results {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
+    position: absolute;
+    inset: 0;
     background-color: #36393e;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
 }
 
 #search-loading-overlay {
@@ -490,8 +500,9 @@ header {
     margin-top: 2px;
 }
 
-#search-results.hidden {
-    display: none !important;
+#search-results.panel-hidden {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 #search-results-header {

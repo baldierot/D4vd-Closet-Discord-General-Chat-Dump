@@ -127,10 +127,11 @@ function setupDOM() {
                     <button id="tab-chat" class="tab active">Chat</button>
                     <button id="tab-search" class="tab" disabled>Search</button>
                 </div>
+                <div id="panel-stack">
                 <main id="content">
                     <div id="timeline"></div>
                 </main>
-                <div id="search-results" class="hidden">
+                <div id="search-results" class="panel-hidden">
                 <div id="search-loading-overlay" class="hidden"><div class="search-spinner"></div><span id="search-loading-text"></span></div>
                 <div id="search-results-header">
                     <div id="search-results-top-row">
@@ -145,6 +146,7 @@ function setupDOM() {
                 </div>
                 <div id="search-pinned-day" class="hidden"></div>
                 <div id="search-results-list"></div>
+            </div>
             </div>
             </div>
         </div>
@@ -388,8 +390,8 @@ describe('search across all days', () => {
 
         searchInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
 
-        expect(document.getElementById('search-results').classList.contains('hidden')).toBe(true);
-        expect(document.getElementById('content').style.display).not.toBe('none');
+        expect(document.getElementById('search-results').classList.contains('panel-hidden')).toBe(true);
+        expect(document.getElementById('content').classList.contains('panel-hidden')).toBe(false);
     });
 });
 

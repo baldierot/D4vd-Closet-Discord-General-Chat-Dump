@@ -667,13 +667,13 @@ function setupSearch() {
 
 function switchTab(tab) {
     if (tab === 'chat') {
-        content.style.display = '';
-        searchResults.classList.add('hidden');
+        content.classList.remove('panel-hidden');
+        searchResults.classList.add('panel-hidden');
         tabChat.classList.add('active');
         tabSearch.classList.remove('active');
     } else {
-        content.style.display = 'none';
-        searchResults.classList.remove('hidden');
+        content.classList.add('panel-hidden');
+        searchResults.classList.remove('panel-hidden');
         tabChat.classList.remove('active');
         tabSearch.classList.add('active');
     }
@@ -985,7 +985,6 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
 
     searchLoadingOverlay.classList.add('hidden');
     switchTab('chat');
-    content.offsetHeight;
 
     if (target) {
         const prev = document.querySelector('.search-match');
