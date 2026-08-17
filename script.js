@@ -639,7 +639,6 @@ function renderDayBatch(state) {
 const searchResults = document.getElementById('search-results');
 const searchProgress = document.getElementById('search-progress');
 const searchResultsList = document.getElementById('search-results-list');
-const searchClose = document.getElementById('search-close');
 const searchPinnedDay = document.getElementById('search-pinned-day');
 const searchLoadingOverlay = document.getElementById('search-loading-overlay');
 const searchLoadingText = document.getElementById('search-loading-text');
@@ -659,7 +658,6 @@ function setupSearch() {
         if (e.key === 'Enter') doSearch();
         if (e.key === 'Escape') switchTab('chat');
     });
-    searchClose.addEventListener('click', closeSearchResults);
     filterDisplay.addEventListener('input', applyResultFilters);
     filterId.addEventListener('input', applyResultFilters);
     filterMessage.addEventListener('input', applyResultFilters);
@@ -838,7 +836,7 @@ function applyResultFilters() {
 }
 
 function syncSearchView() {
-    if (!virtState) return;
+    if (!virtState || searchResults.classList.contains('panel-hidden')) return;
     const { items, offsets, headerOf, spacer } = virtState;
 
     const scrollTop = searchResultsList.scrollTop;
