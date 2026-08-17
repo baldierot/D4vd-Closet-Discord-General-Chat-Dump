@@ -91,19 +91,51 @@ async function init() {
     loadRange();
     setupSearch();
 
+    if (pendingMessage) {
+        scrollToLinkedMessage(pendingMessage);
+        pendingMessage = null;
+    }
+
     window.addEventListener('hashchange', () => {
-        if (loadFromHash()) { closeSearchResults(); loadRange(); }
+        if (loadFromHash()) {
+            closeSearchResults();
+            loadRange();
+            if (pendingMessage) {
+                scrollToLinkedMessage(pendingMessage);
+                pendingMessage = null;
+            }
+        }
     });
     window.addEventListener('resize', updateSliderPositions);
-    content.addEventListener('click', () => {
+    timeline.addEventListener('click', (e) => {
+        const container = e.target.closest('.chatlog__message-container');
+        if (!container) {
+            clearSelectedMessage();
+            return;
+        }
         const prev = document.querySelector('.search-match');
-        if (prev) prev.classList.remove('search-match');
+        if (prev === container) {
+            clearSelectedMessage();
+        } else {
+            if (prev) prev.classList.remove('search-match');
+            container.classList.add('search-match');
+            setMessageHash(container);
+        }
     });
 }
 
+let pendingMessage = null;
+
 function loadFromHash() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) return false;
+    const raw = window.location.hash.substring(1);
+    if (!raw) return false;
+    const [hash, msgPart] = raw.split('!');
+    if (msgPart && msgPart.includes(':')) {
+        const [date, id] = msgPart.split(':');
+        pendingMessage = { date, id };
+    } else {
+        pendingMessage = null;
+    }
     const parts = hash.split('..');
     if (parts.length === 2) {
         const si = manifest.findIndex(d => d.date === parts[0]);
@@ -132,9 +164,51 @@ function updateHash() {
     const s = manifest[loadedStartIdx].date;
     const e = manifest[loadedEndIdx].date;
     const newHash = `${s}..${e}`;
-    if (window.location.hash.substring(1) !== newHash) {
+    if (window.location.hash.substring(1).split('!')[0] !== newHash) {
         history.replaceState(null, '', '#' + newHash);
     }
+}
+
+function setMessageHash(el) {
+    const s = manifest[loadedStartIdx].date;
+    const e = manifest[loadedEndIdx].date;
+    const daySlot = el.closest('.day-slot');
+    const date = daySlot ? daySlot.dataset.date : '';
+    history.replaceState(null, '', `#${s}..${e}!${date}:${el.id}`);
+}
+
+function clearSelectedMessage() {
+    const prev = document.querySelector('.search-match');
+    if (prev) prev.classList.remove('search-match');
+    updateHash();
+}
+
+async function scrollToLinkedMessage({ date, id }) {
+    const state = dayStates.get(date);
+    if (!state) return;
+
+    if (currentObserver) currentObserver.disconnect();
+
+    if (state.state === 'empty' || state.state === 'unloaded') {
+        state.state = 'empty';
+        await loadDayContent(date, state.gen);
+    }
+
+    if (state.state === 'loaded') {
+        while (state.renderedCount < state.groups.length) {
+            renderDayBatch(state);
+            const el = document.getElementById(id);
+            if (el) break;
+            await new Promise(r => requestAnimationFrame(r));
+        }
+    }
+
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add('search-match');
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
+    }
+    reconnectObserver();
 }
 
 function setupSlider() {
@@ -899,6 +973,7 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
         if (prev) prev.classList.remove('search-match');
         target.classList.add('search-match');
         target.scrollIntoView({ behavior: 'auto', block: 'center' });
+        if (target.id) setMessageHash(target);
     }
 
     reconnectObserver();
