@@ -838,7 +838,7 @@ function applyResultFilters() {
 }
 
 function syncSearchView() {
-    if (!virtState || searchResults.classList.contains('panel-hidden')) return;
+    if (!virtState) return;
     const { items, offsets, headerOf, spacer } = virtState;
 
     const scrollTop = searchResultsList.scrollTop;
