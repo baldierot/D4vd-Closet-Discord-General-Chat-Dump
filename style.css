@@ -387,17 +387,23 @@ header {
 }
 
 /* Content */
+#content, #search-results {
+    will-change: visibility;
+}
+
 #content {
     position: absolute;
     inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: auto;
+    z-index: 1;
 }
 
 #content.panel-hidden {
     visibility: hidden;
     pointer-events: none;
+    z-index: 0;
 }
 
 #timeline {
@@ -471,6 +477,7 @@ header {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    z-index: 1;
 }
 
 #search-loading-overlay {
@@ -503,6 +510,7 @@ header {
 #search-results.panel-hidden {
     visibility: hidden;
     pointer-events: none;
+    z-index: 0;
 }
 
 #search-results-header {
