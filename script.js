@@ -165,8 +165,15 @@ function loadFromHash() {
 function updateHash() {
     const s = manifest[loadedStartIdx].date;
     const e = manifest[loadedEndIdx].date;
-    const newHash = `${s}..${e}`;
-    if (window.location.hash.substring(1).split('!')[0] !== newHash) {
+    const selected = document.querySelector('.search-match');
+    let msgPart = '';
+    if (selected && selected.id) {
+        msgPart = '!' + (selected.closest('.day-slot')?.dataset.date || '') + ':' + selected.id;
+    } else if (pendingMessage) {
+        msgPart = '!' + pendingMessage.date + ':' + pendingMessage.id;
+    }
+    const newHash = `${s}..${e}${msgPart}`;
+    if (window.location.hash.substring(1) !== newHash) {
         history.replaceState(null, '', '#' + newHash);
     }
 }
