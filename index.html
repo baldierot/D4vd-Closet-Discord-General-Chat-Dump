@@ -48,23 +48,33 @@
             <input type="date" id="picker-start" class="sr-only">
             <input type="date" id="picker-end" class="sr-only">
         </aside>
-        <main id="content">
-            <div id="timeline"></div>
-        </main>
-        <div id="search-results" class="hidden">
-            <div id="search-results-header">
-                <div id="search-results-top-row">
-                    <span id="search-progress"></span>
-                    <button id="search-close" title="Close search">✕</button>
-                </div>
-                <div id="search-result-filters">
-                    <input type="text" id="filter-display" class="result-filter" placeholder="Display name">
-                    <input type="text" id="filter-id" class="result-filter" placeholder="ID">
-                    <input type="text" id="filter-message" class="result-filter" placeholder="Message">
-                </div>
+        <div id="panels">
+            <div id="tab-bar">
+                <button id="tab-chat" class="tab active">Chat</button>
+                <button id="tab-search" class="tab" disabled>Search</button>
             </div>
-            <div id="search-pinned-day" class="hidden"></div>
-            <div id="search-results-list"></div>
+            <main id="content">
+                <div id="timeline"></div>
+            </main>
+            <div id="search-results" class="hidden">
+                <div id="search-loading-overlay" class="hidden">
+                    <div class="search-spinner"></div>
+                    <span id="search-loading-text"></span>
+                </div>
+                <div id="search-results-header">
+                    <div id="search-results-top-row">
+                        <span id="search-progress"></span>
+                        <button id="search-close" title="Clear search">✕</button>
+                    </div>
+                    <div id="search-result-filters">
+                        <input type="text" id="filter-display" class="result-filter" placeholder="Display name">
+                        <input type="text" id="filter-id" class="result-filter" placeholder="ID">
+                        <input type="text" id="filter-message" class="result-filter" placeholder="Message">
+                    </div>
+                </div>
+                <div id="search-pinned-day" class="hidden"></div>
+                <div id="search-results-list"></div>
+            </div>
         </div>
     </div>
 
