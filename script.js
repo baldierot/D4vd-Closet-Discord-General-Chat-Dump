@@ -10,6 +10,8 @@ const SCROLL_THRESHOLD = 2000;
 
 const content = document.getElementById('content');
 const timeline = document.getElementById('timeline');
+const tabChat = document.getElementById('tab-chat');
+const tabSearch = document.getElementById('tab-search');
 const sliderTrack = document.getElementById('slider-track');
 const handleStart = document.getElementById('handle-start');
 const handleEnd = document.getElementById('handle-end');
@@ -637,6 +639,8 @@ const searchProgress = document.getElementById('search-progress');
 const searchResultsList = document.getElementById('search-results-list');
 const searchClose = document.getElementById('search-close');
 const searchPinnedDay = document.getElementById('search-pinned-day');
+const searchLoadingOverlay = document.getElementById('search-loading-overlay');
+const searchLoadingText = document.getElementById('search-loading-text');
 const filterDisplay = document.getElementById('filter-display');
 const filterId = document.getElementById('filter-id');
 const filterMessage = document.getElementById('filter-message');
@@ -651,12 +655,28 @@ function setupSearch() {
     searchButton.addEventListener('click', doSearch);
     searchInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') doSearch();
-        if (e.key === 'Escape') closeSearchResults();
+        if (e.key === 'Escape') switchTab('chat');
     });
     searchClose.addEventListener('click', closeSearchResults);
     filterDisplay.addEventListener('input', applyResultFilters);
     filterId.addEventListener('input', applyResultFilters);
     filterMessage.addEventListener('input', applyResultFilters);
+    tabChat.addEventListener('click', () => switchTab('chat'));
+    tabSearch.addEventListener('click', () => switchTab('search'));
+}
+
+function switchTab(tab) {
+    if (tab === 'chat') {
+        content.style.display = '';
+        searchResults.classList.add('hidden');
+        tabChat.classList.add('active');
+        tabSearch.classList.remove('active');
+    } else {
+        content.style.display = 'none';
+        searchResults.classList.remove('hidden');
+        tabChat.classList.remove('active');
+        tabSearch.classList.add('active');
+    }
 }
 
 
@@ -667,8 +687,8 @@ async function doSearch() {
         return;
     }
 
-    searchResults.classList.remove('hidden');
-    content.style.display = 'none';
+    switchTab('search');
+    tabSearch.disabled = false;
     searchProgress.textContent = 'Searching...';
     searchResultsList.innerHTML = '<div class="search-loader"><div class="search-spinner"></div></div>';
 
@@ -898,12 +918,8 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
     const mIdx = manifest.findIndex(d => d.date === date);
     if (mIdx < 0) return;
 
-    if (virtState) {
-        searchResultsList.removeEventListener('scroll', syncSearchView);
-        virtState = null;
-    }
-    searchProgress.textContent = `Loading ${formatDateLabel(date)}...`;
-    searchResultsList.innerHTML = '<div class="search-loader"><div class="search-spinner"></div></div>';
+    searchLoadingText.textContent = `Loading ${formatDateLabel(date)}...`;
+    searchLoadingOverlay.classList.remove('hidden');
 
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
@@ -926,7 +942,7 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
     }
 
     const state = dayStates.get(date);
-    if (!state) { closeSearchResults(); return; }
+    if (!state) { searchLoadingOverlay.classList.add('hidden'); switchTab('chat'); return; }
 
     if (state.state === 'empty' || state.state === 'unloaded') {
         state.state = 'empty';
@@ -964,8 +980,8 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
         if (dayHeader) target = dayHeader;
     }
 
-    closeSearchResults();
-    // Force layout after content becomes visible
+    searchLoadingOverlay.classList.add('hidden');
+    switchTab('chat');
     content.offsetHeight;
 
     if (target) {
@@ -988,14 +1004,15 @@ function reconnectObserver() {
 }
 
 function closeSearchResults() {
-    searchResults.classList.add('hidden');
-    content.style.display = '';
+    switchTab('chat');
+    tabSearch.disabled = true;
     searchProgress.textContent = '';
     searchPinnedDay.classList.add('hidden');
     allSearchItems = null;
     filterDisplay.value = '';
     filterId.value = '';
     filterMessage.value = '';
+    searchResultsList.innerHTML = '';
     if (virtState) {
         searchResultsList.removeEventListener('scroll', syncSearchView);
         virtState = null;

@@ -122,10 +122,16 @@ function setupDOM() {
                 <input type="date" id="picker-start" class="sr-only">
                 <input type="date" id="picker-end" class="sr-only">
             </aside>
-            <main id="content">
-                <div id="timeline"></div>
-            </main>
-            <div id="search-results" class="hidden">
+            <div id="panels">
+                <div id="tab-bar">
+                    <button id="tab-chat" class="tab active">Chat</button>
+                    <button id="tab-search" class="tab" disabled>Search</button>
+                </div>
+                <main id="content">
+                    <div id="timeline"></div>
+                </main>
+                <div id="search-results" class="hidden">
+                <div id="search-loading-overlay" class="hidden"><div class="search-spinner"></div><span id="search-loading-text"></span></div>
                 <div id="search-results-header">
                     <div id="search-results-top-row">
                         <span id="search-progress"></span>
@@ -139,6 +145,7 @@ function setupDOM() {
                 </div>
                 <div id="search-pinned-day" class="hidden"></div>
                 <div id="search-results-list"></div>
+            </div>
             </div>
         </div>
     `;
