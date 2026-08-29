@@ -1,5 +1,6 @@
 import { formatCount, formatDateLabel } from './src/format.js';
 import { splitGroups, annotateAuthorIds } from './src/parse.js';
+import { installAssetFallbacks } from './src/fallbacks.js';
 import {
     indexToPosition, positionToIndex,
     formatRangeLabel,
@@ -87,6 +88,8 @@ async function init() {
             return { days: meta.days, dayOffsets: meta.dayOffsets, authors: meta.authors, displayNames: meta.displayNames, di, ai, dni, c };
         } catch { return null; }
     }
+
+    installAssetFallbacks();
 
     loadFromHash();
     setupSlider();
