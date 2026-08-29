@@ -68,10 +68,15 @@ describe('annotateAuthorIds', () => {
         expect(el.querySelector('.chatlog__author-id').textContent).toBe(' (moji)');
     });
 
-    it('omits the id when it matches the nickname', () => {
+    it('shows the id even when it matches the nickname', () => {
         const el = authorEl('<span class="chatlog__author" title="tweaaks">tweaaks</span>');
-        expect(el.querySelector('.chatlog__author-id')).toBeNull();
-        expect(el.textContent).toBe('tweaaks');
+        expect(el.textContent).toBe('tweaaks (tweaaks)');
+    });
+
+    it('shows the id for a user with no nickname set', () => {
+        // engleezy and whoisorel: title and display text are byte-identical
+        const el = authorEl('<span class="chatlog__author" title="engleezy">engleezy</span>');
+        expect(el.querySelector('.chatlog__author-id').textContent).toBe(' (engleezy)');
     });
 
     it('leaves authors without a title untouched', () => {
@@ -94,6 +99,31 @@ describe('annotateAuthorIds', () => {
         annotateAuthorIds(root);
         expect(root.querySelectorAll('.chatlog__author-id')).toHaveLength(1);
         expect(root.querySelector('.chatlog__author').textContent).toBe('^moji (moji)');
+    });
+
+    it('annotates the quoted author in a reply', () => {
+        // exactly the markup DiscordChatExporter emits for a reply
+        const root = document.createElement('div');
+        root.innerHTML = '<div class="chatlog__reply">'
+            + '<div class="chatlog__reply-author" title="vikin6">Viking</div></div>';
+        annotateAuthorIds(root);
+        const el = root.querySelector('.chatlog__reply-author');
+        expect(el.textContent).toBe('Viking (vikin6)');
+    });
+
+    it('shows the id on a reply author whose name matches the username', () => {
+        const root = document.createElement('div');
+        root.innerHTML = '<div class="chatlog__reply-author" title="engleezy">engleezy</div>';
+        annotateAuthorIds(root);
+        expect(root.querySelector('.chatlog__reply-author').textContent).toBe('engleezy (engleezy)');
+    });
+
+    it('annotates message and reply authors in the same batch', () => {
+        const root = document.createElement('div');
+        root.innerHTML = '<div class="chatlog__reply-author" title="vikin6">Viking</div>'
+            + '<span class="chatlog__author" title="smileysucks">Smiley</span>';
+        annotateAuthorIds(root);
+        expect(root.querySelectorAll('.chatlog__author-id')).toHaveLength(2);
     });
 
     it('keeps the id inside the author span, before the bot tag', () => {
