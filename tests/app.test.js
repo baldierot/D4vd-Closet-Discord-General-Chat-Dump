@@ -367,6 +367,86 @@ describe('search across all days', () => {
         expect(results.length).toBeGreaterThanOrEqual(2);
     });
 
+    // A search with no matches used to crash: with items empty the binary
+    // searches leave startIdx=0/endIdx=0, and the render loop read items[0].
+    it('handles a search with no matches without throwing', async () => {
+        vi.stubGlobal('fetch', mockFetch([
+            { url: 'day-manifest.json', json: TEST_MANIFEST },
+            { url: 'search-data-meta.json', json: SEARCH_META },
+            { url: 'search-data-0.json', json: SEARCH_CHUNK_0 },
+        ]));
+
+        const errors = [];
+        const onErr = (e) => errors.push(e.reason || e.error || e);
+        window.addEventListener('unhandledrejection', onErr);
+        window.addEventListener('error', onErr);
+
+        const { ready } = await import('../script.js');
+        await ready;
+
+        document.getElementById('search-input').value = 'zzzznomatchzzzz';
+        document.getElementById('search-button').click();
+
+        await vi.waitFor(() => {
+            expect(document.querySelector('.search-empty')).not.toBeNull();
+        }, { timeout: 3000 });
+
+        expect(document.querySelectorAll('.search-result')).toHaveLength(0);
+        expect(errors).toHaveLength(0);
+
+        window.removeEventListener('unhandledrejection', onErr);
+        window.removeEventListener('error', onErr);
+    });
+
+    it('reports 0 results instead of hanging on "Searching..."', async () => {
+        vi.stubGlobal('fetch', mockFetch([
+            { url: 'day-manifest.json', json: TEST_MANIFEST },
+            { url: 'search-data-meta.json', json: SEARCH_META },
+            { url: 'search-data-0.json', json: SEARCH_CHUNK_0 },
+        ]));
+
+        const { ready } = await import('../script.js');
+        await ready;
+
+        document.getElementById('search-input').value = 'zzzznomatchzzzz';
+        document.getElementById('search-button').click();
+
+        await vi.waitFor(() => {
+            expect(document.getElementById('search-progress').textContent).toContain('0 result');
+        }, { timeout: 3000 });
+    });
+
+    // The pinned day header survived into the next search, still showing the
+    // previous search's date and match count.
+    it('clears the pinned day header when a later search returns nothing', async () => {
+        vi.stubGlobal('fetch', mockFetch([
+            { url: 'day-manifest.json', json: TEST_MANIFEST },
+            { url: 'search-data-meta.json', json: SEARCH_META },
+            { url: 'search-data-0.json', json: SEARCH_CHUNK_0 },
+        ]));
+
+        const { ready } = await import('../script.js');
+        await ready;
+
+        const input = document.getElementById('search-input');
+        const button = document.getElementById('search-button');
+        const pinned = document.getElementById('search-pinned-day');
+
+        input.value = 'alice';
+        button.click();
+        await vi.waitFor(() => {
+            expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(0);
+        }, { timeout: 3000 });
+
+        input.value = 'zzzznomatchzzzz';
+        button.click();
+        await vi.waitFor(() => {
+            expect(document.querySelector('.search-empty')).not.toBeNull();
+        }, { timeout: 3000 });
+
+        expect(pinned.classList.contains('hidden')).toBe(true);
+    });
+
     it('closes results panel on escape', async () => {
         vi.stubGlobal('fetch', mockFetch([
             { url: 'day-manifest.json', json: TEST_MANIFEST },

@@ -648,6 +648,13 @@ img.asset-missing {
     font-weight: 400;
 }
 
+.search-empty {
+    padding: 24px 16px;
+    color: #96989d;
+    font-size: 13px;
+    text-align: center;
+}
+
 .search-result-content {
     color: #dcddde;
     overflow: hidden;
