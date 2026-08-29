@@ -41,7 +41,6 @@ let loadGeneration = 0;
 let currentObserver = null;
 let currentScrollHandler = null;
 let isDragging = false;
-let searchAbort = null;
 let searchData = null;
 let searchDataPromise = null;
 
@@ -764,7 +763,7 @@ async function doSearch() {
     const rangeDays = selectedEndIdx - selectedStartIdx + 1;
     let progressText = `${totalMatches} result${totalMatches === 1 ? '' : 's'} within ${rangeDays}-day range`;
     searchProgress.textContent = progressText;
-    if (virtState.truncated) {
+    if (virtState && virtState.truncated) {
         const warn = document.createElement('div');
         warn.className = 'search-truncated-warn';
         warn.textContent = '⚠ Too many to display — showing first ~660k, use filters to narrow down';
@@ -776,6 +775,19 @@ function renderSearchItems(items) {
     if (virtState) {
         searchResultsList.removeEventListener('scroll', syncSearchView);
         virtState = null;
+    }
+
+    // A previous search leaves its pinned day header behind, and with no items
+    // syncSearchView never reaches the code that would replace it.
+    searchPinnedDay.classList.add('hidden');
+
+    if (items.length === 0) {
+        searchResultsList.innerHTML = '';
+        const empty = document.createElement('div');
+        empty.className = 'search-empty';
+        empty.textContent = 'No matches.';
+        searchResultsList.appendChild(empty);
+        return;
     }
 
     const offsets = new Float64Array(items.length + 1);

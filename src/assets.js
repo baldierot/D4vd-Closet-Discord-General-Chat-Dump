@@ -2,8 +2,6 @@
 // day HTML. No DOM, no network — so both the browser and the Node scripts
 // (audit-assets.mjs, refresh-avatars.mjs) can share them.
 
-export const DISCORD_EPOCH = 1420070400000n;
-
 // d4vd's closet -> #『✮』general-chat. Resolved from the channel id that
 // appears in every attachment URL in the archive.
 export const GUILD_ID = '1010305792181801003';
