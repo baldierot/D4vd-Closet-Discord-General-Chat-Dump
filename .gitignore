@@ -3,3 +3,6 @@ dist/
 .vite/
 coverage/
 .playwright-mcp/
+.env
+.env.*
+*.env
