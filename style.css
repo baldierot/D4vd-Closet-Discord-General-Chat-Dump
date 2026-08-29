@@ -444,6 +444,51 @@ header {
     min-height: 0;
 }
 
+.chatlog__author-id {
+    color: #8e9297;
+    font-weight: 400;
+}
+
+/* Render-time fallbacks for dead asset links (see src/fallbacks.js). */
+
+/* Emoji that never resolved: show the original character from alt instead.
+   DiscordChatExporter emitted twemoji URLs for any non-ASCII char, including
+   maths italics and hieroglyphs that twemoji never shipped. */
+.chatlog__emoji-fallback {
+    display: inline-block;
+    font-size: 1.2rem;
+    line-height: 1.325rem;
+    vertical-align: -0.25rem;
+    margin: 0 0.06rem;
+}
+
+/* Unrecoverable decorative images (embed thumbnails, footer icons) are removed
+   outright. An avatar keeps its box so the message text stays aligned. */
+img.asset-missing {
+    display: none;
+}
+
+.chatlog__avatar.asset-missing {
+    display: block;
+    visibility: hidden;
+}
+
+.asset-unavailable {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid #202225;
+    border-radius: 4px;
+    background-color: #2f3136;
+    color: #96989d;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.asset-unavailable-link {
+    color: #00aff4;
+    font-style: normal;
+}
+
 .center-message {
     display: flex;
     flex-direction: column;

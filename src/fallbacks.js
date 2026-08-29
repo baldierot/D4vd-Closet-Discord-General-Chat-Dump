@@ -1,0 +1,161 @@
+// Render-time repair for dead asset links.
+//
+// The archive HTML is never rewritten. When an image fails to load we swap in
+// something durable that is derivable from data already present in the markup.
+//
+// Images are classified explicitly by class, because the archive uses a dozen
+// of them and they need different treatment. Anything unrecognised is hidden
+// rather than labelled - an earlier catch-all branch announced "attachment not
+// retrievable" over quoted-user icons, which are not attachments at all.
+//
+//   avatar-like -> the deterministic default avatar for that user id
+//   twemoji     -> the literal unicode character sitting in the alt attribute
+//   emoji       -> :name:, the way Discord renders an unavailable custom emoji
+//   media       -> a note linking to the message on Discord
+//   decorative  -> hidden
+//
+// Nothing here needs the network or a token.
+
+import { defaultAvatarUrl, messageLink, avatarIdFromImageSrc } from './assets.js';
+
+// Profile pictures. All three carry the user id inside their own src.
+const AVATAR_CLASSES = [
+    'chatlog__avatar',            // the message author
+    'chatlog__reply-avatar',      // the quoted user in a reply
+    'chatlog__embed-author-icon', // embed author, proxied
+];
+
+// Real user-posted content: worth a note pointing at the original message.
+const MEDIA_CLASSES = [
+    'chatlog__attachment-media',
+    'chatlog__embed-image',
+    'chatlog__embed-generic-image',
+    'chatlog__embed-generic-gifv',
+    'chatlog__embed-generic-video',
+];
+
+// Chrome around content. Nothing is lost by dropping these quietly.
+const DECORATIVE_CLASSES = [
+    'chatlog__embed-footer-icon', // usually a site favicon
+    'chatlog__embed-thumbnail',   // link-preview thumbnail
+];
+
+const STICKER_CLASS = 'chatlog__sticker--media';
+
+function markHandled(el) {
+    el.setAttribute('data-fallback', '1');
+}
+
+function alreadyHandled(el) {
+    return el.hasAttribute('data-fallback');
+}
+
+function hasAny(el, classes) {
+    return classes.some((c) => el.classList.contains(c));
+}
+
+export function userIdFor(el) {
+    const scope = el.closest('.chatlog__message') || el.closest('.chatlog__message-group');
+    if (!scope) return null;
+    const holder = scope.querySelector('[data-user-id]');
+    return holder ? holder.getAttribute('data-user-id') : null;
+}
+
+export function messageIdFor(el) {
+    const container = el.closest('[data-message-id]');
+    return container ? container.getAttribute('data-message-id') : null;
+}
+
+function hide(el) {
+    markHandled(el);
+    el.classList.add('asset-missing');
+    return true;
+}
+
+function textMarker(el, text, title) {
+    markHandled(el);
+    const span = el.ownerDocument.createElement('span');
+    span.className = 'chatlog__emoji-fallback';
+    span.textContent = text;
+    if (title) span.title = title;
+    el.replaceWith(span);
+    return true;
+}
+
+function mediaNote(el) {
+    const media = el.tagName === 'SOURCE' ? (el.parentElement || el) : el;
+    if (alreadyHandled(media)) return false;
+    markHandled(media);
+    const note = media.ownerDocument.createElement('div');
+    note.className = 'asset-unavailable';
+    note.textContent = 'attachment not retrievable';
+    const link = messageLink(messageIdFor(media));
+    if (link) {
+        const a = media.ownerDocument.createElement('a');
+        a.href = link;
+        a.className = 'asset-unavailable-link';
+        a.target = '_blank';
+        a.rel = 'noreferrer';
+        a.textContent = 'view on Discord';
+        note.appendChild(media.ownerDocument.createTextNode(' — '));
+        note.appendChild(a);
+    }
+    media.replaceWith(note);
+    return true;
+}
+
+export function applyAssetFallback(el) {
+    if (!el || alreadyHandled(el)) return false;
+    const tag = el.tagName;
+
+    if (tag === 'IMG') {
+        // Avatars: the id lives in the image's own src, which is the only
+        // correct source for a reply avatar (the surrounding message belongs
+        // to the replier, not the quoted user).
+        if (hasAny(el, AVATAR_CLASSES)) {
+            markHandled(el);
+            let uid = avatarIdFromImageSrc(el.getAttribute('src'));
+            if (!uid && el.classList.contains('chatlog__avatar')) uid = userIdFor(el);
+            if (uid) {
+                try {
+                    el.src = defaultAvatarUrl(uid);
+                    return true;
+                } catch { /* non-numeric id */ }
+            }
+            el.classList.add('asset-missing');
+            return true;
+        }
+
+        // Emoji: twemoji alt holds the actual character, custom emoji alt holds
+        // the name.
+        if (el.classList.contains('chatlog__emoji')) {
+            const alt = el.getAttribute('alt') || el.getAttribute('title') || '';
+            const isCustom = (el.getAttribute('src') || '').includes('/emojis/');
+            return textMarker(el, isCustom ? (alt ? `:${alt}:` : ':emoji:') : alt,
+                el.getAttribute('title') || alt);
+        }
+
+        if (el.classList.contains(STICKER_CLASS)) {
+            return textMarker(el, ':sticker:', 'sticker unavailable');
+        }
+
+        if (hasAny(el, DECORATIVE_CLASSES)) return hide(el);
+        if (hasAny(el, MEDIA_CLASSES)) return mediaNote(el);
+
+        // Unknown image class: hide it rather than mislabel it.
+        return hide(el);
+    }
+
+    // Playable media is always user-posted content.
+    if (tag === 'VIDEO' || tag === 'SOURCE' || tag === 'AUDIO') return mediaNote(el);
+
+    return false;
+}
+
+// `error` events from media do not bubble, but they do capture - so one
+// listener on the document covers every batch rendered later.
+export function installAssetFallbacks(root = document) {
+    root.addEventListener('error', (e) => {
+        applyAssetFallback(e.target);
+    }, true);
+}
