@@ -108,6 +108,16 @@ export function defaultAvatarUrl(userId) {
     return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex(userId)}.png`;
 }
 
+// The user id for an avatar image, taken from the image's own src. Works for a
+// direct avatar url and for one wrapped in Discord's external proxy (embed
+// author icons arrive that way). Preferred over walking the DOM: a reply avatar
+// sits inside the *replying* author's message, so the surrounding
+// data-user-id belongs to the wrong person.
+export function avatarIdFromImageSrc(src) {
+    if (!src) return null;
+    return userIdFromAvatarUrl(src) || userIdFromAvatarUrl(proxyOrigin(src) || '');
+}
+
 export function avatarUrl(userId, hash, size = 512) {
     if (!hash) return defaultAvatarUrl(userId);
     const ext = hash.startsWith('a_') ? 'gif' : 'png';

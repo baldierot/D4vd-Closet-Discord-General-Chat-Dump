@@ -462,8 +462,14 @@ header {
     margin: 0 0.06rem;
 }
 
-/* Avatar with no recoverable user id. */
+/* Unrecoverable decorative images (embed thumbnails, footer icons) are removed
+   outright. An avatar keeps its box so the message text stays aligned. */
+img.asset-missing {
+    display: none;
+}
+
 .chatlog__avatar.asset-missing {
+    display: block;
     visibility: hidden;
 }
 
