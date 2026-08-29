@@ -904,7 +904,7 @@ function syncSearchView() {
             const authorEl = document.createElement('span');
             authorEl.className = 'search-result-author';
             authorEl.textContent = item.displayName;
-            if (item.username !== item.displayName) {
+            if (item.username) {
                 const idSpan = document.createElement('span');
                 idSpan.className = 'search-result-id';
                 idSpan.textContent = ' (' + item.username + ')';
