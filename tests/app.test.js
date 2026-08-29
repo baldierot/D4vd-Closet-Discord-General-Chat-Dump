@@ -21,10 +21,10 @@ class MockIntersectionObserver {
 vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
 
 const TEST_MANIFEST = [
-    { date: '2023-01-10', messageCount: 3, groupCount: 3, htmlSize: 1000, indexSize: 200 },
-    { date: '2023-01-11', messageCount: 5, groupCount: 5, htmlSize: 2000, indexSize: 400 },
-    { date: '2023-01-12', messageCount: 2, groupCount: 2, htmlSize: 500, indexSize: 100 },
-    { date: '2023-02-01', messageCount: 4, groupCount: 4, htmlSize: 800, indexSize: 300 },
+    { date: '2023-01-10', messageCount: 3 },
+    { date: '2023-01-11', messageCount: 5 },
+    { date: '2023-01-12', messageCount: 2 },
+    { date: '2023-02-01', messageCount: 4 },
 ];
 
 const GROUP_MARKER = '<div class=chatlog__message-group>';

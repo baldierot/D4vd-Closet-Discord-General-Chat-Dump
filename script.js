@@ -1,6 +1,6 @@
 import { formatCount, formatDateLabel } from './src/format.js';
 import { splitGroups, annotateAuthorIds } from './src/parse.js';
-import { installAssetFallbacks } from './src/fallbacks.js';
+import { installAssetFallbacks, initLottieStickers } from './src/fallbacks.js';
 import {
     indexToPosition, positionToIndex,
     formatRangeLabel,
@@ -638,6 +638,9 @@ function renderDayBatch(state) {
         state.chatlogEl.appendChild(temp.firstChild);
     }
     state.renderedCount = end;
+
+    // After insertion: lottie sizes its svg from the live container.
+    initLottieStickers(state.chatlogEl);
 
     requestAnimationFrame(() => {
         state.chatlogEl.querySelectorAll('.chatlog__markdown-pre--multiline:not(.hljs)').forEach(el => {

@@ -17,8 +17,15 @@ if (isMainThread) {
     const chunks = [];
     let current = { days: [], bytes: 0 };
     for (const day of manifest) {
+        // Size is derived here rather than shipped in the manifest: only this
+        // chunker ever wanted it, and every visitor was downloading it.
+        try {
+            day.htmlSize = fs.statSync(path.join('days', day.date + '.html')).size;
+        } catch {
+            day.htmlSize = 0;
+        }
         current.days.push(day);
-        current.bytes += day.htmlSize || 0;
+        current.bytes += day.htmlSize;
         if (current.bytes >= CHUNK_BYTES) {
             chunks.push(current.days);
             current = { days: [], bytes: 0 };

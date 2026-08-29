@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { applyAssetFallback, userIdFor, messageIdFor, installAssetFallbacks } from '../src/fallbacks.js';
+import { applyAssetFallback, userIdFor, messageIdFor, installAssetFallbacks, initLottieStickers, localStickerPath } from '../src/fallbacks.js';
 import { defaultAvatarIndex, GUILD_ID, CHANNEL_ID, messageLink, avatarIdFromImageSrc } from '../src/assets.js';
 
 const USER = '342852097831862284';
@@ -222,5 +222,89 @@ describe('non-attachment images are not labelled as attachments', () => {
           </div>`;
         applyAssetFallback(document.querySelector('img'));
         expect(document.querySelector('.asset-unavailable')).not.toBeNull();
+    });
+});
+
+// Animated stickers ship as an empty <div data-source="....json">. Nothing ever
+// rendered them, and because a div fires no error event they failed silently.
+describe('lottie stickers', () => {
+    const SRC = 'https://cdn.discordapp.com/stickers/749054660769218631.json';
+
+    function stickerMarkup(src = SRC) {
+        document.body.innerHTML = `<div class="chatlog__sticker" title="Wave">`
+            + `<div class="chatlog__sticker--media" data-source="${src}"></div></div>`;
+        return document.querySelector('.chatlog__sticker--media');
+    }
+
+    function fakeLottie() {
+        const calls = [];
+        return {
+            calls,
+            loadAnimation(opts) { calls.push(opts); return { addEventListener() {} }; },
+        };
+    }
+
+    it('hands the sticker to lottie with its source url', () => {
+        const el = stickerMarkup();
+        const lib = fakeLottie();
+        initLottieStickers(document.body, lib);
+        expect(lib.calls).toHaveLength(1);
+        expect(lib.calls[0].path).toBe('stickers/749054660769218631.json');
+        expect(lib.calls[0].container).toBe(el);
+        expect(lib.calls[0].renderer).toBe('svg');
+    });
+
+    it('does not initialise the same sticker twice', () => {
+        stickerMarkup();
+        const lib = fakeLottie();
+        initLottieStickers(document.body, lib);
+        initLottieStickers(document.body, lib);
+        expect(lib.calls).toHaveLength(1);
+    });
+
+    it('ignores png stickers, which render as plain images', () => {
+        stickerMarkup('https://cdn.discordapp.com/stickers/1.png');
+        const lib = fakeLottie();
+        initLottieStickers(document.body, lib);
+        expect(lib.calls).toHaveLength(0);
+    });
+
+    it('falls back to :name: when lottie is unavailable', () => {
+        stickerMarkup();
+        initLottieStickers(document.body, null);
+        expect(document.querySelector('.chatlog__emoji-fallback').textContent).toBe(':Wave:');
+    });
+
+    it('falls back when the sticker json cannot be fetched', () => {
+        stickerMarkup();
+        let onFail;
+        const lib = { loadAnimation: () => ({ addEventListener: (ev, cb) => { if (ev === 'data_failed') onFail = cb; } }) };
+        initLottieStickers(document.body, lib);
+        expect(document.querySelector('.chatlog__emoji-fallback')).toBeNull();
+        onFail();
+        expect(document.querySelector('.chatlog__emoji-fallback').textContent).toBe(':Wave:');
+    });
+
+    it('falls back when loadAnimation throws', () => {
+        stickerMarkup();
+        initLottieStickers(document.body, { loadAnimation() { throw new Error('boom'); } });
+        expect(document.querySelector('.chatlog__emoji-fallback').textContent).toBe(':Wave:');
+    });
+});
+
+describe('localStickerPath', () => {
+    it('maps a cdn sticker url to the locally hosted copy', () => {
+        expect(localStickerPath('https://cdn.discordapp.com/stickers/749054660769218631.json'))
+            .toBe('stickers/749054660769218631.json');
+    });
+
+    it('returns null for png and gif stickers', () => {
+        expect(localStickerPath('https://cdn.discordapp.com/stickers/1.png')).toBeNull();
+        expect(localStickerPath('https://cdn.discordapp.com/stickers/1.gif')).toBeNull();
+    });
+
+    it('returns null for junk', () => {
+        expect(localStickerPath('')).toBeNull();
+        expect(localStickerPath(null)).toBeNull();
     });
 });

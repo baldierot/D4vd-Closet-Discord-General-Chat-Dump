@@ -14,7 +14,9 @@ This project has two branches:
 ```bash
 # After committing on dev. Run from the repo root, still on dev.
 DEV_SRC=$(git ls-tree --name-only dev:src | sed 's|^|src/|')
-FILES=".gitignore index.html script.js style.css chatlog.css Screenshot.png $DEV_SRC"
+DEV_STICKERS=$(git ls-tree -r --name-only dev -- stickers)
+FILES=".gitignore index.html script.js style.css chatlog.css Screenshot.png day-manifest.json
+       $DEV_SRC $DEV_STICKERS"
 
 export GIT_INDEX_FILE=/tmp/mainidx; rm -f "$GIT_INDEX_FILE"
 git read-tree main
@@ -38,8 +40,8 @@ git diff --stat main dev -- $FILES src/   # must be empty
 git push origin dev main
 ```
 
-Add other changed site files to `FILES` as needed (`day-manifest.json`,
-`search-data-*.json`, `days/`, `README.md`).
+Add other changed site files to `FILES` as needed (`search-data-*.json`,
+`days/`, `README.md`).
 
 The deletion loop matters: `update-index --add` only ever adds, so a file
 removed on `dev` otherwise lives on forever in `main`. That is how
@@ -70,11 +72,13 @@ so neither problem can occur.
 | chatlog.css, day-manifest.json, days/ | yes | yes |
 | search-data-*.json, search-data-meta.json | yes | yes |
 | Screenshot.png, README.md | yes | yes |
+| stickers/ | yes | yes |
 | .gitignore | yes | yes |
 | package.json, package-lock.json | no | yes |
 | vite.config.js, CONTRIBUTING.md | no | yes |
-| tests/, build-search*.js, extract-days.js | no | yes |
-| audit-assets.mjs, days-search-indexes/ | no | yes |
+| tests/, build-search*.js | no | yes |
+| audit-assets.mjs, fetch-stickers.mjs | no | yes |
+| days-search-indexes/ | no | yes |
 | node_modules/, token.env | no | no (gitignored) |
 
 ## Repo-local git settings
@@ -110,6 +114,20 @@ node build-search.js            # Consolidates into search-data-*.json chunks
 ```
 
 Or use `npm run build:search` to run both.
+
+## Animated stickers
+
+`stickers/` holds the 136 lottie stickers the archive references, ~18 MB.
+They are served locally rather than from Discord because the CDN returns
+sticker JSON **without** an `access-control-allow-origin` header - images get
+one, JSON does not - so a cross-origin fetch is blocked and lottie can never
+load it. `src/fallbacks.js` rewrites each `data-source` URL to the local copy
+and falls back to `:name:` if it is missing.
+
+```bash
+node fetch-stickers.mjs           # download anything missing
+node fetch-stickers.mjs --force   # re-download everything
+```
 
 ## Auditing asset links
 
