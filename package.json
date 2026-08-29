@@ -5,7 +5,8 @@
     "dev": "vite",
     "test": "vitest",
     "build:search-indexes": "node build-search-indexes.js",
-    "build:search": "node build-search-indexes.js && node build-search.js"
+    "build:search": "node build-search-indexes.js && node build-search.js",
+    "audit:assets": "node --no-warnings audit-assets.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
