@@ -152,6 +152,63 @@ export function applyAssetFallback(el) {
     return false;
 }
 
+// Animated stickers are emitted as an empty <div data-source="....json">, to be
+// filled in by lottie. DiscordChatExporter's own bootstrap script did not
+// survive the split into day fragments, so nothing ever rendered them: the
+// element is a div, so no error event fires and they were blank, silently.
+//
+// The JSON is served from stickers/ rather than Discord's CDN, which returns it
+// without an access-control-allow-origin header (images get one, sticker JSON
+// does not) - so a cross-origin fetch is blocked and lottie can never load it.
+// fetch-stickers.mjs downloads the 136 the archive references.
+export function localStickerPath(src) {
+    const m = String(src || '').match(/stickers\/(\d+)\.json/);
+    return m ? `stickers/${m[1]}.json` : null;
+}
+
+// `lib` is injectable for tests; in the browser it is the global from the
+// lottie-web script tag in index.html.
+export function initLottieStickers(root, lib) {
+    const lottieLib = lib !== undefined ? lib : globalThis.lottie;
+    for (const el of root.querySelectorAll('.chatlog__sticker--media[data-source]')) {
+        if (el.hasAttribute('data-sticker-init')) continue;
+        el.setAttribute('data-sticker-init', '1');
+
+        const local = localStickerPath(el.getAttribute('data-source'));
+        if (!local) continue;   // png/gif stickers render as plain images
+
+        if (!lottieLib || typeof lottieLib.loadAnimation !== 'function') {
+            stickerFallback(el);
+            continue;
+        }
+        try {
+            const anim = lottieLib.loadAnimation({
+                container: el,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: local,
+            });
+            if (anim && typeof anim.addEventListener === 'function') {
+                anim.addEventListener('data_failed', () => stickerFallback(el));
+            }
+        } catch {
+            stickerFallback(el);
+        }
+    }
+}
+
+function stickerFallback(el) {
+    const wrap = el.closest('.chatlog__sticker');
+    const name = wrap && wrap.getAttribute('title');
+    el.textContent = '';
+    const span = el.ownerDocument.createElement('span');
+    span.className = 'chatlog__emoji-fallback';
+    span.textContent = name ? `:${name}:` : ':sticker:';
+    if (name) span.title = name;
+    el.appendChild(span);
+}
+
 // `error` events from media do not bubble, but they do capture - so one
 // listener on the document covers every batch rendered later.
 export function installAssetFallbacks(root = document) {
