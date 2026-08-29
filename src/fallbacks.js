@@ -11,7 +11,7 @@
 //
 // Nothing here needs the network or a token.
 
-import { defaultAvatarUrl } from './assets.js';
+import { defaultAvatarUrl, messageLink } from './assets.js';
 
 function markHandled(el) {
     el.setAttribute('data-fallback', '1');
@@ -26,6 +26,11 @@ export function userIdFor(el) {
     if (!scope) return null;
     const holder = scope.querySelector('[data-user-id]');
     return holder ? holder.getAttribute('data-user-id') : null;
+}
+
+export function messageIdFor(el) {
+    const container = el.closest('[data-message-id]');
+    return container ? container.getAttribute('data-message-id') : null;
 }
 
 export function applyAssetFallback(el) {
@@ -65,22 +70,26 @@ export function applyAssetFallback(el) {
         return true;
     }
 
-    // Attachments and embedded media: leave a readable note plus the raw link,
-    // rather than a broken-image icon.
+    // Attachments and embedded media. The baked-in CDN url is signed and long
+    // dead, and there is no unsigned form that resolves - so pointing at it is
+    // useless. Link to the message on Discord instead: that permalink needs no
+    // token, never expires, and still shows the attachment to anyone in the
+    // server.
     if (tag === 'IMG' || tag === 'VIDEO' || tag === 'SOURCE') {
         const media = tag === 'SOURCE' ? (el.parentElement || el) : el;
         if (alreadyHandled(media)) return false;
         markHandled(media);
-        const url = el.getAttribute('src') || '';
         const note = media.ownerDocument.createElement('div');
         note.className = 'asset-unavailable';
-        note.textContent = 'attachment no longer available';
-        if (url) {
+        note.textContent = 'attachment not retrievable';
+        const link = messageLink(messageIdFor(media));
+        if (link) {
             const a = media.ownerDocument.createElement('a');
-            a.href = url;
+            a.href = link;
             a.className = 'asset-unavailable-link';
+            a.target = '_blank';
             a.rel = 'noreferrer';
-            a.textContent = 'original link';
+            a.textContent = 'view on Discord';
             note.appendChild(media.ownerDocument.createTextNode(' — '));
             note.appendChild(a);
         }

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { applyAssetFallback, userIdFor, installAssetFallbacks } from '../src/fallbacks.js';
-import { defaultAvatarIndex } from '../src/assets.js';
+import { applyAssetFallback, userIdFor, messageIdFor, installAssetFallbacks } from '../src/fallbacks.js';
+import { defaultAvatarIndex, GUILD_ID, CHANNEL_ID, messageLink } from '../src/assets.js';
 
 const USER = '342852097831862284';
 
@@ -93,14 +93,32 @@ describe('emoji fallback', () => {
     });
 });
 
+describe('messageLink', () => {
+    it('builds a permalink that needs no token and cannot expire', () => {
+        expect(messageLink('9')).toBe(`https://discord.com/channels/${GUILD_ID}/${CHANNEL_ID}/9`);
+    });
+
+    it('returns null without a message id', () => {
+        expect(messageLink(null)).toBeNull();
+    });
+
+    it('finds the message id from a nested element', () => {
+        message({ body: '<img class="chatlog__attachment-media" src="x">' });
+        expect(messageIdFor(document.querySelector('.chatlog__attachment-media'))).toBe('9');
+    });
+});
+
 describe('attachment fallback', () => {
-    it('replaces a dead attachment image with a readable note', () => {
+    it('replaces a dead attachment with a note linking to the Discord message', () => {
         message({ body: '<img class="chatlog__attachment-media" src="https://cdn.discordapp.com/attachments/1/2/x.jpg?ex=1&is=2">' });
         applyAssetFallback(document.querySelector('.chatlog__attachment-media'));
         const note = document.querySelector('.asset-unavailable');
         expect(note).not.toBeNull();
-        expect(note.textContent).toContain('no longer available');
-        expect(note.querySelector('a').getAttribute('href')).toContain('attachments/1/2/x.jpg');
+        expect(note.textContent).toContain('not retrievable');
+        // must NOT point at the dead cdn url
+        const href = note.querySelector('a').getAttribute('href');
+        expect(href).not.toContain('cdn.discordapp.com');
+        expect(href).toBe(`https://discord.com/channels/${GUILD_ID}/${CHANNEL_ID}/9`);
     });
 
     it('replaces the video when a source element fails', () => {

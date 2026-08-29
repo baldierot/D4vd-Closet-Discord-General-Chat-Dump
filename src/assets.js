@@ -4,6 +4,18 @@
 
 export const DISCORD_EPOCH = 1420070400000n;
 
+// d4vd's closet -> #『✮』general-chat. Resolved from the channel id that
+// appears in every attachment URL in the archive.
+export const GUILD_ID = '1010305792181801003';
+export const CHANNEL_ID = '1010305793876312159';
+
+// A message permalink needs no token, never expires, and is derivable offline
+// from the data-message-id already present on every message container.
+export function messageLink(messageId) {
+    if (!messageId) return null;
+    return `https://discord.com/channels/${GUILD_ID}/${CHANNEL_ID}/${messageId}`;
+}
+
 export const CLASSES = [
     'avatar',        // cdn.discordapp.com/avatars/{user}/{hash}  - stale when user changes avatar
     'defaultAvatar', // cdn.discordapp.com/embed/avatars/{n}      - permanent
