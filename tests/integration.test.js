@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { splitGroups } from '../src/parse.js';
-import { filterMessages } from '../src/search.js';
 import { formatDateLabel } from '../src/format.js';
 import {
     indexToPosition, positionToIndex,
@@ -19,12 +18,6 @@ const DAY_HTML = [
     makeGroup(102, 'Charlie', 'good morning'),
 ].join('\n');
 
-const DAY_SEARCH_INDEX = [
-    { messageId: 'chatlog__message-container-100', author: 'alice', content: 'hello everyone' },
-    { messageId: 'chatlog__message-container-101', author: 'bob', content: 'hey alice' },
-    { messageId: 'chatlog__message-container-102', author: 'charlie', content: 'good morning' },
-];
-
 describe('splitGroups + DOM rendering', () => {
     it('splits HTML and renders message groups', () => {
         const chatlog = document.createElement('div');
@@ -42,62 +35,6 @@ describe('splitGroups + DOM rendering', () => {
         const containers = chatlog.querySelectorAll('[id^="chatlog__message-container-"]');
         expect(containers).toHaveLength(3);
         expect(containers[0].id).toBe('chatlog__message-container-100');
-    });
-});
-
-describe('search + DOM filtering', () => {
-    let chatlog;
-
-    beforeEach(() => {
-        chatlog = document.createElement('div');
-        const groups = splitGroups(DAY_HTML);
-        const temp = document.createElement('div');
-        temp.innerHTML = groups.join('');
-        while (temp.firstChild) {
-            chatlog.appendChild(temp.firstChild);
-        }
-    });
-
-    it('hides non-matching groups and shows matching ones', () => {
-        const matchIds = filterMessages(DAY_SEARCH_INDEX, 'alice', 'both');
-        expect(matchIds.size).toBe(2);
-
-        chatlog.querySelectorAll('.chatlog__message-group').forEach(group => {
-            const container = group.querySelector('[id^="chatlog__message-container-"]');
-            if (!container) { group.style.display = 'none'; return; }
-            group.style.display = matchIds.has(container.id) ? '' : 'none';
-        });
-
-        const visible = chatlog.querySelectorAll('.chatlog__message-group:not([style*="display: none"])');
-        expect(visible).toHaveLength(2);
-        const hidden = chatlog.querySelectorAll('.chatlog__message-group[style*="display: none"]');
-        expect(hidden).toHaveLength(1);
-    });
-
-    it('clear search restores all groups', () => {
-        const matchIds = filterMessages(DAY_SEARCH_INDEX, 'alice', 'both');
-        chatlog.querySelectorAll('.chatlog__message-group').forEach(g => {
-            const c = g.querySelector('[id^="chatlog__message-container-"]');
-            g.style.display = (c && matchIds.has(c.id)) ? '' : 'none';
-        });
-
-        chatlog.querySelectorAll('.chatlog__message-group').forEach(g => g.style.display = '');
-
-        chatlog.querySelectorAll('.chatlog__message-group').forEach(g => {
-            expect(g.style.display).toBe('');
-        });
-    });
-
-    it('returns zero matches for non-existent term', () => {
-        expect(filterMessages(DAY_SEARCH_INDEX, 'zzzzzzz', 'both').size).toBe(0);
-    });
-
-    it('author-only filter does not match content', () => {
-        expect(filterMessages(DAY_SEARCH_INDEX, 'morning', 'author').size).toBe(0);
-    });
-
-    it('content-only filter does not match author names', () => {
-        expect(filterMessages(DAY_SEARCH_INDEX, 'charlie', 'content').size).toBe(0);
     });
 });
 

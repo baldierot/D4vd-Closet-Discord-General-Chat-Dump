@@ -41,7 +41,6 @@ let loadGeneration = 0;
 let currentObserver = null;
 let currentScrollHandler = null;
 let isDragging = false;
-let searchAbort = null;
 let searchData = null;
 let searchDataPromise = null;
 
