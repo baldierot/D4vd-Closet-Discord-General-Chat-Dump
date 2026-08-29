@@ -477,7 +477,11 @@ function setupObservers(gen) {
     if (currentObserver) currentObserver.disconnect();
     if (currentScrollHandler) content.removeEventListener('scroll', currentScrollHandler);
     loadQueue.clear();
-    activeLoads = 0;
+    // activeLoads is NOT reset here. Loads from the previous generation are
+    // still in flight and each one still decrements in its finally, so zeroing
+    // the counter drives it negative and the MAX_CONCURRENT_LOADS throttle
+    // stops working. Every started load settles exactly once, so leaving it
+    // alone keeps it balanced.
     currentGen = gen;
     pendingBatchDays.clear();
 
@@ -596,6 +600,17 @@ function processLoadQueue() {
     }
 }
 
+// A load whose generation was superseded must hand the day back as 'empty' and
+// re-queue it. Leaving it on 'loading' strands it forever: the observer only
+// queues 'empty' days and reloadDay only revives 'unloaded' ones, so the slot
+// would stay blank for the rest of the session.
+function releaseStale(state, date) {
+    if (state.state === 'loading') {
+        state.state = 'empty';
+        if (state.gen === currentGen) loadQueue.add(date);
+    }
+}
+
 async function loadDayContent(date, gen) {
     const state = dayStates.get(date);
     if (!state || state.state !== 'empty') return;
@@ -609,7 +624,7 @@ async function loadDayContent(date, gen) {
             return r.text();
         });
 
-        if (state.gen !== gen) return;
+        if (state.gen !== gen) return releaseStale(state, date);
 
         state.groups = splitGroups(html);
         state.renderedCount = 0;
@@ -618,7 +633,7 @@ async function loadDayContent(date, gen) {
         renderDayBatch(state);
 
     } catch (err) {
-        if (state.gen !== gen) return;
+        if (state.gen !== gen) return releaseStale(state, date);
         state.chatlogEl.innerHTML =
             `<div class="center-message"><p>Failed to load ${day.date}: ${err.message}</p></div>`;
         state.state = 'error';
@@ -964,7 +979,6 @@ async function navigateToEntry(date, dayIdx, entryIdx) {
         const cancelGen = ++loadGeneration;
         currentGen = cancelGen;
         loadQueue.clear();
-        activeLoads = 0;
         for (const [, s] of dayStates) {
             s.gen = cancelGen;
         }
