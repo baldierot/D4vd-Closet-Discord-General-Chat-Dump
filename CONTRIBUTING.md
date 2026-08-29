@@ -13,7 +13,8 @@ This project has two branches:
 
 ```bash
 # After committing on dev. Run from the repo root, still on dev.
-FILES=".gitignore index.html script.js style.css chatlog.css $(git ls-tree --name-only dev:src | sed 's|^|src/|')"
+DEV_SRC=$(git ls-tree --name-only dev:src | sed 's|^|src/|')
+FILES=".gitignore index.html script.js style.css chatlog.css Screenshot.png $DEV_SRC"
 
 export GIT_INDEX_FILE=/tmp/mainidx; rm -f "$GIT_INDEX_FILE"
 git read-tree main
@@ -22,17 +23,28 @@ for f in $FILES; do
   git update-index --add --cacheinfo \
     "$(echo "$entry" | awk '{print $1}'),$(echo "$entry" | awk '{print $3}'),$f"
 done
+
+# delete: files main still carries that dev has dropped
+for f in $(git ls-tree -r --name-only main -- src); do
+  echo "$DEV_SRC" | grep -qx "$f" || git update-index --force-remove "$f"
+done
+
 TREE=$(git write-tree); unset GIT_INDEX_FILE
 
 git update-ref refs/heads/main \
   "$(git commit-tree "$TREE" -p "$(git rev-parse main)" -m 'Same commit message')"
 
-git diff --stat main dev -- $FILES   # must be empty
+git diff --stat main dev -- $FILES src/   # must be empty
 git push origin dev main
 ```
 
 Add other changed site files to `FILES` as needed (`day-manifest.json`,
-`search-data-*.json`, `days/`, `Screenshot.png`, `README.md`).
+`search-data-*.json`, `days/`, `README.md`).
+
+The deletion loop matters: `update-index --add` only ever adds, so a file
+removed on `dev` otherwise lives on forever in `main`. That is how
+`src/search.js` nearly stayed on the deployed site after being deleted. The
+verification diff covers `src/` as a directory precisely so a leftover shows up.
 
 ### Why not `git checkout main`
 
