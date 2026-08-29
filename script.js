@@ -1,5 +1,5 @@
 import { formatCount, formatDateLabel } from './src/format.js';
-import { splitGroups } from './src/parse.js';
+import { splitGroups, annotateAuthorIds } from './src/parse.js';
 import {
     indexToPosition, positionToIndex,
     formatRangeLabel,
@@ -631,6 +631,7 @@ function renderDayBatch(state) {
 
     const temp = document.createElement('div');
     temp.innerHTML = chunk;
+    annotateAuthorIds(temp);
     while (temp.firstChild) {
         state.chatlogEl.appendChild(temp.firstChild);
     }

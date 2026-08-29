@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitGroups } from '../src/parse.js';
+import { splitGroups, annotateAuthorIds } from '../src/parse.js';
 
 describe('splitGroups', () => {
     const marker = '<div class=chatlog__message-group>';
@@ -51,5 +51,57 @@ describe('splitGroups', () => {
         expect(result).toHaveLength(1);
         expect(result[0]).toContain('data-message-id=123');
         expect(result[0]).toContain('hello');
+    });
+});
+
+describe('annotateAuthorIds', () => {
+    function authorEl(html) {
+        const root = document.createElement('div');
+        root.innerHTML = html;
+        annotateAuthorIds(root);
+        return root.querySelector('.chatlog__author');
+    }
+
+    it('appends the discord id next to the nickname', () => {
+        const el = authorEl('<span class="chatlog__author" title="moji" data-user-id="1">^moji</span>');
+        expect(el.textContent).toBe('^moji (moji)');
+        expect(el.querySelector('.chatlog__author-id').textContent).toBe(' (moji)');
+    });
+
+    it('omits the id when it matches the nickname', () => {
+        const el = authorEl('<span class="chatlog__author" title="tweaaks">tweaaks</span>');
+        expect(el.querySelector('.chatlog__author-id')).toBeNull();
+        expect(el.textContent).toBe('tweaaks');
+    });
+
+    it('leaves authors without a title untouched', () => {
+        const el = authorEl('<span class="chatlog__author">Alice</span>');
+        expect(el.querySelector('.chatlog__author-id')).toBeNull();
+    });
+
+    it('annotates every author in the batch', () => {
+        const root = document.createElement('div');
+        root.innerHTML = '<span class="chatlog__author" title="a1">Alice</span>'
+            + '<span class="chatlog__author" title="b1">Bob</span>';
+        annotateAuthorIds(root);
+        expect(root.querySelectorAll('.chatlog__author-id')).toHaveLength(2);
+    });
+
+    it('does not annotate twice', () => {
+        const root = document.createElement('div');
+        root.innerHTML = '<span class="chatlog__author" title="moji">^moji</span>';
+        annotateAuthorIds(root);
+        annotateAuthorIds(root);
+        expect(root.querySelectorAll('.chatlog__author-id')).toHaveLength(1);
+        expect(root.querySelector('.chatlog__author').textContent).toBe('^moji (moji)');
+    });
+
+    it('keeps the id inside the author span, before the bot tag', () => {
+        const root = document.createElement('div');
+        root.innerHTML = '<div class="chatlog__header">'
+            + '<span class="chatlog__author" title="MEE6#4876">MEE6</span> '
+            + '<span class="chatlog__author-tag">BOT</span></div>';
+        annotateAuthorIds(root);
+        expect(root.textContent.trim()).toBe('MEE6 (MEE6#4876) BOT');
     });
 });
